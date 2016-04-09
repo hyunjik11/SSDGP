@@ -31,23 +31,24 @@ gpcf = gpcf_sexp('lengthScale', length_scale, 'magnSigma2', sigma_RBF2);
 gp=gp_set('lik',lik,'cf',gpcf); %exact gp
 [K,~]=gp_trcov(gp,x);
 
-frob_svd=zeros(6,1); spec_svd=zeros(6,1);
-mean_frob_naive=zeros(6,1); mean_spec_naive=zeros(6,1);
-mean_frob_fic=zeros(6,1); mean_spec_fic=zeros(6,1);
-mean_frob_pic=zeros(6,1); mean_spec_pic=zeros(6,1);
-mean_frob_rff=zeros(6,1); mean_spec_rff=zeros(6,1);
-std_frob_naive=zeros(6,1); std_spec_naive=zeros(6,1);
-std_frob_fic=zeros(6,1); std_spec_fic=zeros(6,1);
-std_frob_pic=zeros(6,1); std_spec_pic=zeros(6,1);
-std_frob_rff=zeros(6,1); std_spec_rff=zeros(6,1);
-mean_ip_naive=zeros(6,1); mean_ld_naive=zeros(6,1);
-mean_ip_fic=zeros(6,1); mean_ld_fic=zeros(6,1);
-mean_ip_pic=zeros(6,1); mean_ld_pic=zeros(6,1);
-mean_ip_rff=zeros(6,1); mean_ld_rff=zeros(6,1);
-std_ip_naive=zeros(6,1); std_ld_naive=zeros(6,1);
-std_ip_fic=zeros(6,1); std_ld_fic=zeros(6,1);
-std_ip_pic=zeros(6,1); std_ld_pic=zeros(6,1);
-std_ip_rff=zeros(6,1); std_ld_rff=zeros(6,1);
+frob_svd=zeros(5,1); spec_svd=zeros(5,1);
+mean_frob_naive=zeros(5,1); mean_spec_naive=zeros(5,1);
+mean_frob_fic=zeros(5,1); mean_spec_fic=zeros(5,1);
+mean_frob_pic=zeros(5,1); mean_spec_pic=zeros(5,1);
+mean_frob_rff=zeros(5,1); mean_spec_rff=zeros(5,1);
+std_frob_naive=zeros(5,1); std_spec_naive=zeros(5,1);
+std_frob_fic=zeros(5,1); std_spec_fic=zeros(5,1);
+std_frob_pic=zeros(5,1); std_spec_pic=zeros(5,1);
+std_frob_rff=zeros(5,1); std_spec_rff=zeros(5,1);
+mean_ip_naive=zeros(5,1); mean_ld_naive=zeros(5,1);
+mean_ip_fic=zeros(5,1); mean_ld_fic=zeros(5,1);
+mean_ip_pic=zeros(5,1); mean_ld_pic=zeros(5,1);
+mean_ip_rff=zeros(5,1); mean_ld_rff=zeros(5,1);
+std_ip_naive=zeros(5,1); std_ld_naive=zeros(5,1);
+std_ip_fic=zeros(5,1); std_ld_fic=zeros(5,1);
+std_ip_pic=zeros(5,1); std_ld_pic=zeros(5,1);
+std_ip_rff=zeros(5,1); std_ld_rff=zeros(5,1);
+mean_var_nll=zeros(5,1); std_var_nll=zeros(5,1);
 k=1;
 for m=[10,20,40,80,160]
     [U,S,V]=svds(K,m);
@@ -61,23 +62,26 @@ for m=[10,20,40,80,160]
     fic_ip_values=zeros(10,1); fic_ld_values=zeros(10,1);
     pic_ip_values=zeros(10,1); pic_ld_values=zeros(10,1);
     rff_ip_values=zeros(10,1); rff_ld_values=zeros(10,1);
+    var_nll_values=zeros(10,1);
     
     parfor i=1:10
-%         X_u=datasample(x,m,1,'Replace',false); %each row specifies coordinates of an inducing point. here we randomly sample m data points
-%         lik = lik_gaussian('sigma2', 0.2^2);
-%         gpcf = gpcf_sexp('lengthScale', ones(1,D), 'magnSigma2', 0.2^2);
-%         gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf', gpcf,'X_u', X_u); %var_gp
-%         opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','off');
-%         gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
-%         xu=gp_var.X_u;
-%         [K_big,~]=gp_trcov(gp,[x;xu]);
-%         K_mn=K_big(n+1:n+m,1:n); K_mm=K_big(n+1:n+m,n+1:n+m);
-%         L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
-%         L=L_mm'\K_mn; %L'*L=K_hat=K_mn'*(K_mm\K_mn)
-        idx=randsample(n,m);
-        K_mn=K(idx,:); K_mm=K(idx,idx);
+        X_u=datasample(x,m,1,'Replace',false); %each row specifies coordinates of an inducing point. here we randomly sample m data points
+        lik = lik_gaussian('sigma2', 0.2^2);
+        gpcf = gpcf_sexp('lengthScale', ones(1,D), 'magnSigma2', 0.2^2);
+        gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf', gpcf,'X_u', X_u); %var_gp
+        opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','off');
+        gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
+        [~,nll]=gp_e([],gp_var,x,y);
+        var_nll_values(i)=nll;
+        xu=gp_var.X_u;
+        [K_big,~]=gp_trcov(gp,[x;xu]);
+        K_mn=K_big(n+1:n+m,1:n); K_mm=K_big(n+1:n+m,n+1:n+m);
         L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
         L=L_mm'\K_mn; %L'*L=K_hat=K_mn'*(K_mm\K_mn)
+%         idx=randsample(n,m);
+%         K_mn=K(idx,:); K_mm=K(idx,idx);
+%         L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
+%         L=L_mm'\K_mn; %L'*L=K_hat=K_mn'*(K_mm\K_mn)
         K_naive=L'*L;
         K_fic=K_naive+diag(diag(K-K_naive));
         K_pic=K_naive+blockdiag(K-K_naive,m);
@@ -129,11 +133,12 @@ for m=[10,20,40,80,160]
     std_ip_fic(k)=std(fic_ip_values); std_ld_fic(k)=std(fic_ld_values);
     std_ip_pic(k)=std(pic_ip_values); std_ld_pic(k)=std(pic_ld_values);
     std_ip_rff(k)=std(rff_ip_values); std_ld_rff(k)=std(rff_ld_values);
+    mean_var_nll(k)=mean(var_nll_values); std_var_nll(k)=std(var_nll_values);
     k=k+1;
 	fprintf('m=%d done \n',m);
 end
-clear K U S V K_svd K_mn K_mm L_mm L K_naive K_fic K_pic K_rff L_rff L_fic L_pic L_naive temp_rff temp_fic temp_pic temp_naive
-save('ppfull_rand_indpts_workspace.mat');
+clear K U S V K_big K_svd K_mn K_mm L_mm L K_naive K_fic K_pic K_rff L_rff L_fic L_pic L_naive temp_rff temp_fic temp_pic temp_naive
+save('ppfull_var_indpts_workspace.mat');
 delete(POOL);
 % k=1;
 % mean_nll=zeros(6,1); mean_length_scale1=zeros(6,1);
@@ -237,18 +242,3 @@ delete(POOL);
 % k=k+1;
 % end
 
-% To optimize the parameters and inducing inputs sequentially uncomment the below lines
-% $$$ iter = 1
-% $$$ e = gp_e(w,gp_var,x,y)
-% $$$ e_old = inf;
-% $$$ while iter < 100 & abs(e_old-e) > 1e-3
-% $$$     e_old = e;
-% $$$     
-% $$$     gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');  % optimize parameters and inducing inputs
-% $$$     gp_var=gp_optim(gp_var,x,y,'opt',opt);
-% $$$     gp_var = gp_set(gp_var, 'infer_params', 'inducing');  % optimize parameters and inducing inputs
-% $$$     gp_var=gp_optim(gp_var,x,y,'opt',opt);
-% $$$     e = gp_e(w,gp_var,x,y);
-% $$$     iter = iter +1;
-% $$$     [iter e]
-% $$$ end
