@@ -1,0 +1,496 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN">
+<html xmlns:mwsh="http://www.mathworks.com/namespace/mcode/v1/syntaxhighlight.dtd">
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   
+      <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      -->
+      <title>Demo of limest</title>
+      <meta name="generator" content="MATLAB 7.4">
+      <meta name="date" content="2008-05-26">
+      <meta name="m-file" content="demo_limest"><style>
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head>
+   <body>
+      <div class="content">
+         <h1>Demo of limest</h1>
+         <introduction>
+            <p>Computation of a limit usually involves a function that we cannot evaluate at the point of interest. It is often due to a
+               singularity at the point of interest that we cannot evaluate the function. Limest does the work for you, carefully extrapolating
+               your function down to the limiting value.
+            </p>
+            <p>John D'Errico, <a href="mailto:woodchips@rochester.rr.com">woodchips@rochester.rr.com</a></p>
+            <p>5/24/2008</p>
+         </introduction>
+         <h2>Contents</h2>
+         <div>
+            <ul>
+               <li><a href="#1">Limit of sin(x)/x, x --&gt; 0</a></li>
+               <li><a href="#3">The derivative as a limit, using the definition of a derivative</a></li>
+               <li><a href="#4">Find the residue at a first order pole</a></li>
+               <li><a href="#6">A limit with a low order subtractive cancellation</a></li>
+               <li><a href="#7">The function needs not be vectorized</a></li>
+               <li><a href="#8">A limit with a higher order subtractive cancellation</a></li>
+               <li><a href="#11">Changing the order of the method used</a></li>
+               <li><a href="#12">The highest accuracy</a></li>
+               <li><a href="#13">Harder problems are still solvable</a></li>
+               <li><a href="#14">Limits in the complex plane</a></li>
+               <li><a href="#15">A limit at infinity</a></li>
+               <li><a href="#16">A limit from two different directions</a></li>
+               <li><a href="#17">No problems on functions that are well defined at the limit point</a></li>
+               <li><a href="#19">If the limit does not exist, the error estimate will be large.</a></li>
+            </ul>
+         </div>
+         <h2>Limit of sin(x)/x, x --&gt; 0<a name="1"></a></h2>
+         <p>The true limit is 1, but note that MATLAB will not return the limiting value of this function at zero. Instead, we get a 0/0
+            result, a NaN.
+         </p><pre class="codeinput">format <span class="string">long</span> <span class="string">g</span>
+sin(0)./0
+</pre><pre class="codeoutput">ans =
+   NaN
+</pre><p>Limest can properly predict the required limit, at the same time returning a measure of its uncertainty in that estimate.</p><pre class="codeinput">[lim,err] = limest(@(x) sin(x)./x,0)
+</pre><pre class="codeoutput">lim =
+                         1
+err =
+      3.10418245619633e-15
+</pre><h2>The derivative as a limit, using the definition of a derivative<a name="3"></a></h2>
+         <p>Find d(cos(x))/dx at x == pi/2. That derivative is -1. The limit will be taken as a function of the differential parameter,
+            dx. So we take the limit as dx --&gt; 0, for a fixed value of x0.
+         </p><pre class="codeinput">x0 = pi/2;
+[lim,err] = limest(@(dx) (cos(x0+dx) - cos(x0))./dx,0)
+</pre><pre class="codeoutput">lim =
+                        -1
+err =
+      2.83371792311754e-15
+</pre><h2>Find the residue at a first order pole<a name="4"></a></h2>
+         <p>The function 1./(1-exp(2*z)) has a simple pole at z=0. The <a href="http://en.wikipedia.org/wiki/Complex_residue"><tt>residue</tt></a> is given by the limit of (z-0)*fun(z) as z approaches the pole at 0.
+         </p><pre>Here, that residue should be -0.5.</pre><pre class="codeinput">[lim,err] = limest(@(z) z./(1-exp(2*z)),0)
+</pre><pre class="codeoutput">lim =
+        -0.500000000000235
+err =
+      4.53752019010913e-12
+</pre><h2>A limit with a low order subtractive cancellation<a name="6"></a></h2>
+         <p>f(x) = (exp(x)-1)./x</p>
+         <p>As x --&gt; 0, f(x) should approach 1. We can see from the series approximation for exp(x), the first term is 1. But when x is
+            very near zero, the constant term dominates, then we subtract 1 and divide by x. But it is too late, since information is
+            already lost.
+         </p><pre class="codeinput">[lim,err] = limest(@(x) (exp(x)-1)./x,0)
+</pre><pre class="codeoutput">lim =
+         0.999999999999298
+err =
+      7.63157643380744e-13
+</pre><h2>The function needs not be vectorized<a name="7"></a></h2>
+         <p>In the previous example, the function was written in a vectorized form, using ./ where that was appropriate. Of course, not
+            all functions can be easily so written.
+         </p>
+         <p>If the function is not vectorized, then tell limest not to expect that.</p><pre class="codeinput">[lim,err] = limest(@(x) (exp(x)-1)./x,0,<span class="string">'Vectorized'</span>,<span class="string">'no'</span>)
+</pre><pre class="codeoutput">lim =
+         0.999999999999298
+err =
+      7.63157643380744e-13
+</pre><h2>A limit with a higher order subtractive cancellation<a name="8"></a></h2>
+         <p>f(x) = (x.*exp(x)-exp(x)+1)./x.^2</p>
+         <p>As x --&gt; 0, f(x) should approach 0.5. Compared to the previous example, the cancellation is now of second order. The true
+            limit should be 0.5.
+         </p><pre class="codeinput">fun = @(x) (x.*exp(x)-exp(x)+1)./x.^2;
+</pre><p>Evaluation of this function too near the limit point returns numerical trash. Yet, if we move a little further away from the
+            limit point, the function gives a less accurate approximation.
+         </p><pre class="codeinput">fun(0)
+fun(1e-12)
+fun(1e-9)
+fun(1e-8)
+fun(1e-6)
+fun(1e-3)
+</pre><pre class="codeoutput">ans =
+   NaN
+ans =
+     0
+ans =
+     0
+ans =
+          1.11022302462516
+ans =
+         0.500044450291171
+ans =
+         0.500333458330893
+</pre><p>Limest can predict a more accurate limiting value than any single function evaluation. See that the error estimate is roughly
+            of the order of sqrt(eps).
+         </p><pre class="codeinput">[lim,err] = limest(fun,0)
+</pre><pre class="codeoutput">lim =
+         0.500000000094929
+err =
+      1.56957823156003e-09
+</pre><h2>Changing the order of the method used<a name="11"></a></h2>
+         <p>In the previous example, we might choose to change the order of the approximations used. Generally, higher order methods will
+            be better than very low order ones, but too high of an order may suffer from numerical problems too. The default MethodOrder
+            is 4.
+         </p><pre class="codeinput">fun = @(x) (x.*exp(x)-exp(x)+1)./x.^2;
+disp(<span class="string">'MethodOrder == 1'</span>)
+[lim,err] = limest(fun,0,<span class="string">'MethodOrder'</span>,1)
+disp(<span class="string">'MethodOrder == 2'</span>)
+[lim,err] = limest(fun,0,<span class="string">'MethodOrder'</span>,2)
+disp(<span class="string">'MethodOrder == 3'</span>)
+[lim,err] = limest(fun,0,<span class="string">'MethodOrder'</span>,3)
+disp(<span class="string">'MethodOrder == 4'</span>)
+[lim,err] = limest(fun,0,<span class="string">'MethodOrder'</span>,4)
+disp(<span class="string">'MethodOrder == 5'</span>)
+[lim,err] = limest(fun,0,<span class="string">'MethodOrder'</span>,5)
+disp(<span class="string">'MethodOrder == 6'</span>)
+[lim,err] = limest(fun,0,<span class="string">'MethodOrder'</span>,6)
+disp(<span class="string">'MethodOrder == 7'</span>)
+[lim,err] = limest(fun,0,<span class="string">'MethodOrder'</span>,7)
+disp(<span class="string">'MethodOrder == 8'</span>)
+[lim,err] = limest(fun,0,<span class="string">'MethodOrder'</span>,8)
+</pre><pre class="codeoutput">MethodOrder == 1
+lim =
+          0.50000355697623
+err =
+      5.18440971081941e-05
+MethodOrder == 2
+lim =
+         0.499999966564625
+err =
+      3.25141880697321e-07
+MethodOrder == 3
+lim =
+           0.5000000018941
+err =
+      1.44398490012884e-08
+MethodOrder == 4
+lim =
+         0.500000000094929
+err =
+      1.56957823156003e-09
+MethodOrder == 5
+lim =
+         0.500000000165239
+err =
+       9.2459501732486e-10
+MethodOrder == 6
+lim =
+         0.500000001876956
+err =
+      1.49243964407882e-08
+MethodOrder == 7
+lim =
+         0.500000043271551
+err =
+      3.68286624919576e-07
+MethodOrder == 8
+lim =
+         0.499998271135458
+err =
+      1.67740949173514e-05
+</pre><h2>The highest accuracy<a name="12"></a></h2>
+         <p>Use a high order method, but force limest to evaluate the function at a much finer sampling of points. The default sampling
+            will evaluate the function at roughly 25 points. By reducing the stepRatio to 1.25, this will increase to roughly 160 function
+            evaluations.
+         </p><pre class="codeinput">[lim,err] = limest(fun,0,<span class="string">'MethodOrder'</span>,8,<span class="string">'Step'</span>,1.25)
+</pre><pre class="codeoutput">lim =
+         0.500000000002992
+err =
+      1.23941253664887e-12
+</pre><h2>Harder problems are still solvable<a name="13"></a></h2>
+         <p>Cancelling three terms means that nearly any function evaluations anywhere near the limit point will be trash. The limit here
+            is easily found by a Taylor series argument, but it is also solvable using limest. Since it is a high order of cancellation,
+            we need to increase the order of the method, as well as force limest to look farther away than usual from the limit point.
+         </p><pre class="codeinput">fun = @(x) (exp(x)-1-x-x.^2/2)./x.^3;
+[lim,err] = limest(fun,0,<span class="string">'methodorder'</span>,6,<span class="string">'dz'</span>,1)
+</pre><pre class="codeoutput">lim =
+          0.16666660231359
+err =
+      5.71248948194576e-07
+</pre><h2>Limits in the complex plane<a name="14"></a></h2>
+         <p>The limit of cos(z), as z --&gt; is still 1, even if we approach that point from the complex plane. Note that the function may
+            be supplied in a variety of forms. A string function name, an inline function, or an anonymous function.
+         </p><pre class="codeinput">[lim,err] = limest(<span class="string">'cos'</span>,0,<span class="string">'DZ'</span>,0+.00001*sqrt(-1))
+</pre><pre class="codeoutput">lim =
+                         1
+err =
+      5.06910872412027e-15
+</pre><h2>A limit at infinity<a name="15"></a></h2>
+         <p>Take the limit of f(x) = exp(-x)+2, as x --&gt; +inf</p>
+         <p>Since limest will not handle infinite limits, we must transform the problem. Turn the problem into a limit at 0. The true
+            limit at x=inf is clearly 2.
+         </p><pre class="codeinput">fun = @(x) exp(-x) + 2;
+[lim,err] = limest(@(z) fun(1./z),0)
+</pre><pre class="codeoutput">lim =
+                         2
+err =
+       1.0753203460192e-14
+</pre><h2>A limit from two different directions<a name="16"></a></h2>
+         <p>A discontinuous function will have different limits as we approach from below versus from above. Also, I'll use an inline
+            function to define the function.
+         </p><pre class="codeinput">fun = inline(<span class="string">'sign(x)'</span>,<span class="string">'x'</span>);
+disp(<span class="string">'Taking the limit from above, the result should be 1'</span>)
+[lim,err] = limest(fun,0,<span class="string">'dz'</span>,1)
+disp(<span class="string">'Taking the limit from below, the result should be -1'</span>)
+[lim,err] = limest(fun,0,<span class="string">'dz'</span>,-1)
+</pre><pre class="codeoutput">Taking the limit from above, the result should be 1
+lim =
+                         1
+err =
+      5.37660173009599e-15
+Taking the limit from below, the result should be -1
+lim =
+                        -1
+err =
+      5.37660173009599e-15
+</pre><h2>No problems on functions that are well defined at the limit point<a name="17"></a></h2>
+         <p>Here the limit is a simple thing to know, since we can evaluate this function at the limit.</p><pre class="codeinput">fun = @(x) tan(x);
+fun(0)
+</pre><pre class="codeoutput">ans =
+     0
+</pre><p>Limest succeeds, reflecting the problem simplicity with a quite small error estimate.</p><pre class="codeinput">[lim,err] = limest(@(x) tan(x),0)
+</pre><pre class="codeoutput">lim =
+     -4.22420710127785e-24
+err =
+      3.20497058398515e-22
+</pre><h2>If the limit does not exist, the error estimate will be large.<a name="19"></a></h2><pre class="codeinput">fun = @(x) sin(1./x);
+ezplot(fun)
+[lim,err] = limest(fun,0)
+</pre><pre class="codeoutput">lim =
+         0.775477503783198
+err =
+         0.144329285985061
+</pre><img vspace="5" hspace="5" src="demo_limest_01.png"> <p class="footer"><br>
+            Published with MATLAB&reg; 7.4<br></p>
+      </div>
+      <!--
+##### SOURCE BEGIN #####
+%% Demo of limest
+% Computation of a limit usually involves a function that
+% we cannot evaluate at the point of interest. It is often
+% due to a singularity at the point of interest that we
+% cannot evaluate the function. Limest does the work for
+% you, carefully extrapolating your function down to the
+% limiting value.
+%
+% John D'Errico, 
+% woodchips@rochester.rr.com
+%
+% 5/24/2008
+
+%% Limit of sin(x)/x, x REPLACE_WITH_DASH_DASH> 0
+% The true limit is 1, but note that MATLAB will not return the
+% limiting value of this function at zero. Instead, we get a
+% 0/0 result, a NaN.
+format long g
+sin(0)./0
+
+%%
+% Limest can properly predict the required limit, at the same
+% time returning a measure of its uncertainty in that estimate.
+[lim,err] = limest(@(x) sin(x)./x,0)
+
+%% The derivative as a limit, using the definition of a derivative
+% Find d(cos(x))/dx at x == pi/2. That derivative is -1.
+% The limit will be taken as a function of the differential
+% parameter, dx. So we take the limit as dx REPLACE_WITH_DASH_DASH> 0, for a
+% fixed value of x0.
+x0 = pi/2;
+[lim,err] = limest(@(dx) (cos(x0+dx) - cos(x0))./dx,0)
+
+%% Find the residue at a first order pole
+
+%%
+% The function 1./(1-exp(2*z)) has a simple pole at z=0. The
+% <http://en.wikipedia.org/wiki/Complex_residue |residue|>
+% is given by the limit of (z-0)*fun(z) as z approaches the
+% pole at 0.
+%
+%  Here, that residue should be -0.5.
+[lim,err] = limest(@(z) z./(1-exp(2*z)),0)
+
+%% A limit with a low order subtractive cancellation
+% f(x) = (exp(x)-1)./x
+%
+% As x REPLACE_WITH_DASH_DASH> 0, f(x) should approach 1. We can see from
+% the series approximation for exp(x), the first term is 1.
+% But when x is very near zero, the constant term dominates,
+% then we subtract 1 and divide by x. But it is too late,
+% since information is already lost.
+[lim,err] = limest(@(x) (exp(x)-1)./x,0)
+
+%% The function needs not be vectorized
+% In the previous example, the function was written in a
+% vectorized form, using ./ where that was appropriate.
+% Of course, not all functions can be easily so written.
+%
+% If the function is not vectorized, then tell limest
+% not to expect that.
+[lim,err] = limest(@(x) (exp(x)-1)./x,0,'Vectorized','no')
+
+%% A limit with a higher order subtractive cancellation
+% f(x) = (x.*exp(x)-exp(x)+1)./x.^2
+%
+% As x REPLACE_WITH_DASH_DASH> 0, f(x) should approach 0.5. Compared to the previous
+% example, the cancellation is now of second order. The true
+% limit should be 0.5.
+fun = @(x) (x.*exp(x)-exp(x)+1)./x.^2;
+
+%%
+% Evaluation of this function too near the limit point returns
+% numerical trash. Yet, if we move a little further away from
+% the limit point, the function gives a less accurate approximation.
+fun(0)
+fun(1e-12)
+fun(1e-9)
+fun(1e-8)
+fun(1e-6)
+fun(1e-3)
+
+%%
+% Limest can predict a more accurate limiting value than any single
+% function evaluation. See that the error estimate is roughly of
+% the order of sqrt(eps).
+[lim,err] = limest(fun,0)
+
+%% Changing the order of the method used
+% In the previous example, we might choose to change the order
+% of the approximations used. Generally, higher order methods
+% will be better than very low order ones, but too high of an order
+% may suffer from numerical problems too. The default MethodOrder is 4.
+fun = @(x) (x.*exp(x)-exp(x)+1)./x.^2;
+disp('MethodOrder == 1')
+[lim,err] = limest(fun,0,'MethodOrder',1)
+disp('MethodOrder == 2')
+[lim,err] = limest(fun,0,'MethodOrder',2)
+disp('MethodOrder == 3')
+[lim,err] = limest(fun,0,'MethodOrder',3)
+disp('MethodOrder == 4')
+[lim,err] = limest(fun,0,'MethodOrder',4)
+disp('MethodOrder == 5')
+[lim,err] = limest(fun,0,'MethodOrder',5)
+disp('MethodOrder == 6')
+[lim,err] = limest(fun,0,'MethodOrder',6)
+disp('MethodOrder == 7')
+[lim,err] = limest(fun,0,'MethodOrder',7)
+disp('MethodOrder == 8')
+[lim,err] = limest(fun,0,'MethodOrder',8)
+
+%% The highest accuracy
+% Use a high order method, but force limest to evaluate
+% the function at a much finer sampling of points. The
+% default sampling will evaluate the function at roughly
+% 25 points. By reducing the stepRatio to 1.25, this will
+% increase to roughly 160 function evaluations.
+[lim,err] = limest(fun,0,'MethodOrder',8,'Step',1.25)
+
+%% Harder problems are still solvable
+% Cancelling three terms means that nearly any function
+% evaluations anywhere near the limit point will be trash.
+% The limit here is easily found by a Taylor series argument,
+% but it is also solvable using limest. Since it is a high
+% order of cancellation, we need to increase the order of
+% the method, as well as force limest to look farther away than
+% usual from the limit point.
+fun = @(x) (exp(x)-1-x-x.^2/2)./x.^3;
+[lim,err] = limest(fun,0,'methodorder',6,'dz',1)
+
+%% Limits in the complex plane
+% The limit of cos(z), as z REPLACE_WITH_DASH_DASH> is still 1, even if we
+% approach that point from the complex plane. Note that
+% the function may be supplied in a variety of forms. A
+% string function name, an inline function, or an anonymous
+% function.
+[lim,err] = limest('cos',0,'DZ',0+.00001*sqrt(-1))
+
+%% A limit at infinity
+% Take the limit of f(x) = exp(-x)+2, as x REPLACE_WITH_DASH_DASH> +inf
+%
+% Since limest will not handle infinite limits, we must transform
+% the problem. Turn the problem into a limit at 0. The true limit
+% at x=inf is clearly 2.
+fun = @(x) exp(-x) + 2;
+[lim,err] = limest(@(z) fun(1./z),0)
+
+%% A limit from two different directions
+% A discontinuous function will have different limits as we
+% approach from below versus from above. Also, I'll use an
+% inline function to define the function.
+fun = inline('sign(x)','x');
+disp('Taking the limit from above, the result should be 1')
+[lim,err] = limest(fun,0,'dz',1)
+disp('Taking the limit from below, the result should be -1')
+[lim,err] = limest(fun,0,'dz',-1)
+
+%% No problems on functions that are well defined at the limit point
+% Here the limit is a simple thing to know, since we can evaluate this
+% function at the limit.
+fun = @(x) tan(x);
+fun(0)
+
+%%
+% Limest succeeds, reflecting the problem simplicity with a quite
+% small error estimate.
+[lim,err] = limest(@(x) tan(x),0)
+
+%% If the limit does not exist, the error estimate will be large.
+fun = @(x) sin(1./x);
+ezplot(fun)
+[lim,err] = limest(fun,0)
+
+
+##### SOURCE END #####
+-->
+   </body>
+</html>

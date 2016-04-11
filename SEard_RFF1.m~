@@ -1,6 +1,6 @@
 function phi=SEard_RFF1(x,length_scale,sigma_RBF,Z,b)
     %function to generate RFF for SEard kernel
-    %Z~randn(m,D);b~2*pi*rand(m,1);
+    %Z~randn(m,D);b~2*pi*rand(m);
     [n,D]=size(x);
     m=size(Z,1);
     length_scale=reshape(length_scale,[1,D]);

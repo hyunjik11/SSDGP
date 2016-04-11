@@ -29,28 +29,28 @@ signal_var=0.0195;
 lik = lik_gaussian('sigma2', signal_var);
 gpcf = gpcf_sexp('lengthScale', length_scale, 'magnSigma2', sigma_RBF2);
 gp=gp_set('lik',lik,'cf',gpcf); %exact gp
-[K,~]=gp_trcov(gp,x);
+[K,C]=gp_trcov(gp,x);
 
-frob_svd=zeros(5,1); spec_svd=zeros(5,1);
-mean_frob_naive=zeros(5,1); mean_spec_naive=zeros(5,1);
-mean_frob_fic=zeros(5,1); mean_spec_fic=zeros(5,1);
-mean_frob_pic=zeros(5,1); mean_spec_pic=zeros(5,1);
-mean_frob_rff=zeros(5,1); mean_spec_rff=zeros(5,1);
-std_frob_naive=zeros(5,1); std_spec_naive=zeros(5,1);
-std_frob_fic=zeros(5,1); std_spec_fic=zeros(5,1);
-std_frob_pic=zeros(5,1); std_spec_pic=zeros(5,1);
-std_frob_rff=zeros(5,1); std_spec_rff=zeros(5,1);
-mean_ip_naive=zeros(5,1); mean_ld_naive=zeros(5,1);
-mean_ip_fic=zeros(5,1); mean_ld_fic=zeros(5,1);
-mean_ip_pic=zeros(5,1); mean_ld_pic=zeros(5,1);
-mean_ip_rff=zeros(5,1); mean_ld_rff=zeros(5,1);
-std_ip_naive=zeros(5,1); std_ld_naive=zeros(5,1);
-std_ip_fic=zeros(5,1); std_ld_fic=zeros(5,1);
-std_ip_pic=zeros(5,1); std_ld_pic=zeros(5,1);
-std_ip_rff=zeros(5,1); std_ld_rff=zeros(5,1);
-mean_var_nll=zeros(5,1); std_var_nll=zeros(5,1);
+frob_svd=zeros(6,1); spec_svd=zeros(6,1);
+mean_frob_naive=zeros(6,1); mean_spec_naive=zeros(6,1);
+mean_frob_fic=zeros(6,1); mean_spec_fic=zeros(6,1);
+mean_frob_pic=zeros(6,1); mean_spec_pic=zeros(6,1);
+mean_frob_rff=zeros(6,1); mean_spec_rff=zeros(6,1);
+std_frob_naive=zeros(6,1); std_spec_naive=zeros(6,1);
+std_frob_fic=zeros(6,1); std_spec_fic=zeros(6,1);
+std_frob_pic=zeros(6,1); std_spec_pic=zeros(6,1);
+std_frob_rff=zeros(6,1); std_spec_rff=zeros(6,1);
+mean_ip_naive=zeros(6,1); mean_ld_naive=zeros(6,1);
+mean_ip_fic=zeros(6,1); mean_ld_fic=zeros(6,1);
+mean_ip_pic=zeros(6,1); mean_ld_pic=zeros(6,1);
+mean_ip_rff=zeros(6,1); mean_ld_rff=zeros(6,1);
+std_ip_naive=zeros(6,1); std_ld_naive=zeros(6,1);
+std_ip_fic=zeros(6,1); std_ld_fic=zeros(6,1);
+std_ip_pic=zeros(6,1); std_ld_pic=zeros(6,1);
+std_ip_rff=zeros(6,1); std_ld_rff=zeros(6,1);
+mean_var_nll=zeros(6,1); std_var_nll=zeros(6,1);
 k=1;
-for m=[10,20,40,80,160]
+for m=[10,20,40,80,160,320]
     [U,S,V]=svds(K,m);
     K_svd=U*S*V';
     svd_frob_value=norm(K-K_svd,'fro'); svd_spec_value=norm(K-K_svd);
@@ -65,6 +65,7 @@ for m=[10,20,40,80,160]
     var_nll_values=zeros(10,1);
     
     parfor i=1:10
+        warning('off','all');
         X_u=datasample(x,m,1,'Replace',false); %each row specifies coordinates of an inducing point. here we randomly sample m data points
         lik = lik_gaussian('sigma2', 0.2^2);
         gpcf = gpcf_sexp('lengthScale', ones(1,D), 'magnSigma2', 0.2^2);

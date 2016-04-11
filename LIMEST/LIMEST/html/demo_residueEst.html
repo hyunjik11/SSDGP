@@ -1,0 +1,357 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>demo_residueEst</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-03-13"><meta name="DC.source" content="demo_residueEst.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">How does residueEst work?</a></li><li><a href="#2">Use a polynomial to fit a subsequence of points. Polyfit would do.</a></li><li><a href="#3">The trick is learn from Goldilocks.</a></li><li><a href="#4">Residue of exp(z)/z, around z0 == 0</a></li><li><a href="#5">A second order pole, exp(3*z)./z.^2</a></li><li><a href="#6">A second order pole, 1./z.^2, at z0 = 0</a></li><li><a href="#7">Another 2nd order pole with a zero residue, 1./sin(z).^2, z0 = pi</a></li></ul></div><h2>How does residueEst work?<a name="1"></a></h2><pre class="codeinput"><span class="comment">%{
+</span><span class="comment">How might one best compute the residue of a complex function at a known
+</span><span class="comment">pole of low order using numerical techniques? Since the function is not
+</span><span class="comment">finite at the pole, we cannot evaluate it directly there.
+</span><span class="comment">
+</span><span class="comment">The approach taken by residueEst is to sample the function at a geometric
+</span><span class="comment">sequence of points approaching the pole. This is not unlike the approach
+</span><span class="comment">I took with my derivest tools.
+</span><span class="comment">
+</span><span class="comment">For example, suppose we wish to compute the residue of the first order
+</span><span class="comment">pole of 1./sin(z), at z = pi. (The residue is -1.) For a first order
+</span><span class="comment">pole, the residue is given by the limit:
+</span><span class="comment">
+</span><span class="comment">  lim     (f(z)*(z-z0))
+</span><span class="comment">z --&gt; z0
+</span><span class="comment">
+</span><span class="comment">ResidueEst solves this problem by choosing some offset, dz, from z0.
+</span><span class="comment">Pick some small offset, say 1e-16. Now, evaluate the function at a
+</span><span class="comment">sequence of points z0 + dz, z0 + k*dz, z0 + k^2*dz, ..., z0 + k^n*dz.
+</span><span class="comment">
+</span><span class="comment">The default in derivest is to use the geometric factor of k = 4.
+</span><span class="comment">
+</span><span class="comment">%}
+</span>
+format <span class="string">long</span> <span class="string">g</span>
+z0 = pi;
+dz = 1e-16;
+k = 4;
+delta = dz*k.^(0:30)
+
+<span class="comment">% Now, evaluate the function at each of these points, z0 + delta, and</span>
+<span class="comment">% multiply by (z0 + delta - z0) == delta.</span>
+fun = @(z) 1./sin(z);
+fun_of_z = fun(z0+delta).*delta
+</pre><pre class="codeoutput">delta =
+  Columns 1 through 3
+                     1e-16                     4e-16                   1.6e-15
+  Columns 4 through 6
+                   6.4e-15                  2.56e-14                 1.024e-13
+  Columns 7 through 9
+                 4.096e-13                1.6384e-12                6.5536e-12
+  Columns 10 through 12
+               2.62144e-11              1.048576e-10              4.194304e-10
+  Columns 13 through 15
+             1.6777216e-09             6.7108864e-09            2.68435456e-08
+  Columns 16 through 18
+           1.073741824e-07           4.294967296e-07          1.7179869184e-06
+  Columns 19 through 21
+          6.8719476736e-06         2.74877906944e-05        0.0001099511627776
+  Columns 22 through 24
+        0.0004398046511104        0.0017592186044416        0.0070368744177664
+  Columns 25 through 27
+        0.0281474976710656         0.112589990684262          0.45035996273705
+  Columns 28 through 30
+           1.8014398509482          7.20575940379279          28.8230376151712
+  Column 31
+          115.292150460685
+fun_of_z =
+  Columns 1 through 3
+         0.816561967659769         -1.24368623276475         -0.96741494953197
+  Columns 4 through 6
+         -1.05007818637943        -0.998645996304325        -0.999393504822813
+  Columns 7 through 9
+          -1.0006650249676         -1.00016932159893          -1.0000454724843
+  Columns 10 through 12
+        -0.999997574134254          -1.0000025407217         -1.00000060598878
+  Columns 13 through 15
+         -1.00000012230672         -1.00000000138628         -1.00000000424339
+  Columns 16 through 18
+         -1.00000000082177        -0.999999999966395          -1.0000000000115
+  Columns 19 through 21
+         -1.00000000003004         -1.00000000013473          -1.0000000020163
+  Columns 22 through 24
+         -1.00000003223861         -1.00000051580866         -1.00000825298128
+  Columns 25 through 27
+         -1.00013205914403         -1.00211587978403         -1.03462138368425
+  Columns 28 through 30
+         -1.85044046871399         -9.03930662202117            55.26083092194
+  Column 31
+         -142.066423215372
+</pre><h2>Use a polynomial to fit a subsequence of points. Polyfit would do.<a name="2"></a></h2><p>Note that if we look at the points that are very close to z0, then the polynomial may have strange coefficients.</p><pre class="codeinput"><span class="comment">% For a first order pole, we are really only interested in the value</span>
+<span class="comment">% of the constant terms for this polynomial model. Essentially, this</span>
+<span class="comment">% is the extrapolated prediction of the limiting value of our product</span>
+<span class="comment">% extrapolated down to delta == 0.</span>
+P0 = polyfit(delta(1:4),fun_of_z(1:4),2)
+
+<span class="comment">% A nice feature of this sequence of points, is we can re-use the</span>
+<span class="comment">% function values, building a sliding sequence of models.</span>
+P0 = polyfit(delta(2:5),fun_of_z(2:5),2)
+P0 = polyfit(delta(3:6),fun_of_z(3:6),2)
+P0 = polyfit(delta(4:7),fun_of_z(4:7),2)
+P0 = polyfit(delta(5:8),fun_of_z(5:8),2)
+
+<span class="comment">% See how, as we move along this sequence using a sliding window of 4</span>
+<span class="comment">% points, the constant terms is approaching -1.</span>
+P0 = polyfit(delta(5:8),fun_of_z(5:8),2)
+P0 = polyfit(delta(12:15),fun_of_z(12:15),2)
+
+<span class="comment">% At some point, we move just too far away from the pole, and our</span>
+<span class="comment">% extrapolated estimate at the pole becomes poor again.</span>
+P0 = polyfit(delta(26:29),fun_of_z(26:29),2)
+P0 = polyfit(delta(27:30),fun_of_z(27:30),2)
+</pre><pre class="codeoutput">Warning: Polynomial is badly conditioned. Add points with distinct X values,
+reduce the degree of the polynomial, or try centering and scaling as described
+in HELP POLYFIT. 
+P0 =
+      1.40722697171131e+29     -1.08866090694287e+15         0.165206417147826
+Warning: Polynomial is badly conditioned. Add points with distinct X values,
+reduce the degree of the polynomial, or try centering and scaling as described
+in HELP POLYFIT. 
+P0 =
+     -7.74680625721916e+26          25552618526783.7         -1.14677041257162
+Warning: Polynomial is badly conditioned. Add points with distinct X values,
+reduce the degree of the polynomial, or try centering and scaling as described
+in HELP POLYFIT. 
+P0 =
+      4.67339267331006e+24         -451780266912.317         -1.00159018384202
+Warning: Polynomial is badly conditioned. Add points with distinct X values,
+reduce the degree of the polynomial, or try centering and scaling as described
+in HELP POLYFIT. 
+P0 =
+     -1.05363184798865e+24          514903808559.053         -1.03508462443342
+Warning: Polynomial is badly conditioned. Add points with distinct X values,
+reduce the degree of the polynomial, or try centering and scaling as described
+in HELP POLYFIT. 
+P0 =
+      3.39997173195685e+21         -6525897035.24524          -0.9986021313655
+Warning: Polynomial is badly conditioned. Add points with distinct X values,
+reduce the degree of the polynomial, or try centering and scaling as described
+in HELP POLYFIT. 
+P0 =
+      3.39997173195685e+21         -6525897035.24524          -0.9986021313655
+Warning: Polynomial is badly conditioned. Add points with distinct X values,
+reduce the degree of the polynomial, or try centering and scaling as described
+in HELP POLYFIT. 
+P0 =
+         -3107361376.59391          101.434422959505         -1.00000049047424
+P0 =
+        -0.114884717006806        -0.297892275588167        -0.928218832274888
+P0 =
+         0.149132944160628          -2.4122832973759         0.881916750679264
+</pre><h2>The trick is learn from Goldilocks.<a name="3"></a></h2><p>Choose a prediction of the pole for some model that is not too close to the pole, nor to far away. The choice is made by a simple set of rules. First, discard any predictions of the limit that are either NaN or inf. Then trim off a few more predictions, leaving only those predictions in the middle. Next, each prediction is made from a polynomial model with ONE more data point than coefficients to estimate. This yields an estimate of the uncertainty in the constant term using standard statistical methodologies. While a 95% confidence limit has no true statistical meaning, since the data is not truly random, we can still use the information.</p><p>ResidueEst choose the model that had the narrowest confidence bounds around the constant term.</p><pre class="codeinput">[res,errest] = residueEst(@(z) 1./sin(z),pi)
+
+<span class="comment">% See that if the true residue is really is -1, then we should have</span>
+<span class="comment">% (approximately)</span>
+<span class="comment">%</span>
+<span class="comment">% abs(res - (-1)) &lt; errest</span>
+[abs(res - (-1)),errest]
+</pre><pre class="codeoutput">res =
+         -1.00000000000222
+errest =
+      1.23720470391972e-11
+ans =
+      2.22333262911434e-12      1.23720470391972e-11
+</pre><h2>Residue of exp(z)/z, around z0 == 0<a name="4"></a></h2><p>Here the residue should be exp(0) == 1</p><pre class="codeinput">[res,errest] = residueEst(@(z) exp(z)./z,0)
+</pre><pre class="codeoutput">res =
+                         1
+errest =
+     0
+</pre><h2>A second order pole, exp(3*z)./z.^2<a name="5"></a></h2><p>The residue should be 3.</p><pre class="codeinput">[res,errest] = residueEst(@(z) exp(3*z)./z.^2,0,<span class="string">'poleorder'</span>,2)
+
+<span class="comment">% The error estimate is a reaonable one here too.</span>
+[abs(res - 3),errest]
+</pre><pre class="codeoutput">res =
+          3.00000000019214
+errest =
+      2.26398426905353e-10
+ans =
+      1.92144078425827e-10      2.26398426905353e-10
+</pre><h2>A second order pole, 1./z.^2, at z0 = 0<a name="6"></a></h2><p>The residue should be 0</p><pre class="codeinput">[res,errest] = residueEst(@(z) 1./z.^2,0,<span class="string">'poleorder'</span>,2)
+</pre><pre class="codeoutput">res =
+      1.77121275308468e-15
+errest =
+      1.83193682355051e-14
+</pre><h2>Another 2nd order pole with a zero residue, 1./sin(z).^2, z0 = pi<a name="7"></a></h2><p>The residue here is zero</p><pre class="codeinput">[res,errest] = residueEst(@(z) 1./(sin(z).^2),pi,<span class="string">'poleorder'</span>,2)
+</pre><pre class="codeoutput">res =
+     -6.43430530792682e-09
+errest =
+      3.61963048877858e-08
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% How does residueEst work?
+
+%{
+How might one best compute the residue of a complex function at a known
+pole of low order using numerical techniques? Since the function is not
+finite at the pole, we cannot evaluate it directly there.
+
+The approach taken by residueEst is to sample the function at a geometric
+sequence of points approaching the pole. This is not unlike the approach
+I took with my derivest tools.
+
+For example, suppose we wish to compute the residue of the first order
+pole of 1./sin(z), at z = pi. (The residue is -1.) For a first order
+pole, the residue is given by the limit:
+
+  lim     (f(z)*(z-z0))
+z REPLACE_WITH_DASH_DASH> z0
+
+ResidueEst solves this problem by choosing some offset, dz, from z0.
+Pick some small offset, say 1e-16. Now, evaluate the function at a
+sequence of points z0 + dz, z0 + k*dz, z0 + k^2*dz, ..., z0 + k^n*dz.
+
+The default in derivest is to use the geometric factor of k = 4. 
+
+%}
+
+format long g
+z0 = pi;
+dz = 1e-16;
+k = 4;
+delta = dz*k.^(0:30)
+
+% Now, evaluate the function at each of these points, z0 + delta, and
+% multiply by (z0 + delta - z0) == delta.
+fun = @(z) 1./sin(z);
+fun_of_z = fun(z0+delta).*delta
+
+%% Use a polynomial to fit a subsequence of points. Polyfit would do.
+% Note that if we look at the points that are very close to z0, then the
+% polynomial may have strange coefficients.
+
+% For a first order pole, we are really only interested in the value
+% of the constant terms for this polynomial model. Essentially, this
+% is the extrapolated prediction of the limiting value of our product
+% extrapolated down to delta == 0.
+P0 = polyfit(delta(1:4),fun_of_z(1:4),2)
+
+% A nice feature of this sequence of points, is we can re-use the
+% function values, building a sliding sequence of models.
+P0 = polyfit(delta(2:5),fun_of_z(2:5),2)
+P0 = polyfit(delta(3:6),fun_of_z(3:6),2)
+P0 = polyfit(delta(4:7),fun_of_z(4:7),2)
+P0 = polyfit(delta(5:8),fun_of_z(5:8),2)
+
+% See how, as we move along this sequence using a sliding window of 4
+% points, the constant terms is approaching -1.
+P0 = polyfit(delta(5:8),fun_of_z(5:8),2)
+P0 = polyfit(delta(12:15),fun_of_z(12:15),2)
+
+% At some point, we move just too far away from the pole, and our
+% extrapolated estimate at the pole becomes poor again.
+P0 = polyfit(delta(26:29),fun_of_z(26:29),2)
+P0 = polyfit(delta(27:30),fun_of_z(27:30),2)
+
+%% The trick is learn from Goldilocks.
+% Choose a prediction of the pole for some model that is not too
+% close to the pole, nor to far away. The choice is made by a simple
+% set of rules. First, discard any predictions of the limit that are
+% either NaN or inf. Then trim off a few more predictions, leaving
+% only those predictions in the middle. Next, each prediction is made
+% from a polynomial model with ONE more data point than coefficients
+% to estimate. This yields an estimate of the uncertainty in the
+% constant term using standard statistical methodologies. While a
+% 95% confidence limit has no true statistical meaning, since the
+% data is not truly random, we can still use the information.
+%
+% ResidueEst choose the model that had the narrowest confidence
+% bounds around the constant term.
+[res,errest] = residueEst(@(z) 1./sin(z),pi)
+
+% See that if the true residue is really is -1, then we should have
+% (approximately)
+%
+% abs(res - (-1)) < errest
+[abs(res - (-1)),errest]
+
+%% Residue of exp(z)/z, around z0 == 0
+% Here the residue should be exp(0) == 1
+[res,errest] = residueEst(@(z) exp(z)./z,0)
+
+%% A second order pole, exp(3*z)./z.^2
+% The residue should be 3.
+[res,errest] = residueEst(@(z) exp(3*z)./z.^2,0,'poleorder',2)
+
+% The error estimate is a reaonable one here too.
+[abs(res - 3),errest]
+
+%% A second order pole, 1./z.^2, at z0 = 0
+% The residue should be 0
+[res,errest] = residueEst(@(z) 1./z.^2,0,'poleorder',2)
+
+%% Another 2nd order pole with a zero residue, 1./sin(z).^2, z0 = pi
+% The residue here is zero
+[res,errest] = residueEst(@(z) 1./(sin(z).^2),pi,'poleorder',2)
+
+
+##### SOURCE END #####
+--></body></html>
