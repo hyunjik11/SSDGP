@@ -2,6 +2,7 @@ addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
 %addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
 num_workers=10;
 POOL=parpool('local',num_workers);
+maxNumCompThreads(num_workers);
 % % Load the data
 %x=h5read('PPdata.h5','/Xtrain');
 %y=h5read('PPdata.h5','/ytrain');
@@ -29,7 +30,7 @@ signal_var=0.0195;
 lik = lik_gaussian('sigma2', signal_var);
 gpcf = gpcf_sexp('lengthScale', length_scale, 'magnSigma2', sigma_RBF2);
 gp=gp_set('lik',lik,'cf',gpcf); %exact gp
-[K,C]=gp_trcov(gp,x);
+[K,~]=gp_trcov(gp,x);
 
 frob_svd=zeros(6,1); spec_svd=zeros(6,1);
 mean_frob_naive=zeros(6,1); mean_spec_naive=zeros(6,1);

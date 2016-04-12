@@ -7,7 +7,7 @@ function phi=prod_feat(phi1,phi2,idx)
 phi=zeros(m,n);
 for k=1:m
     i=rem(idx(k),m)+1;
-    j=(idx(k)-i+1)/m +1;
+    j=ceil(idx(k)/m);
     phi(k,:)=sqrt(m)*phi1(i,:).*phi2(j,:);
 end
 end

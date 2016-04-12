@@ -1,10 +1,4 @@
-{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf340
-{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
-{\colortbl;\red255\green255\blue255;}
-\paperw16840\paperh11900\margl1440\margr1440\vieww14200\viewh15040\viewkind0
-\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
 
-\f0\fs24 \cf0 PowerPlant:\
 Exact: -lm=-431.351;l=[1.4426,0.0041,4.0272,7.3516];sigma_RBF=0.8296;signal_var=0.0205\
 RFF n=100: \
 run 1: -lm=33.163;l=[1.6516,0.9415,4.7960,5.1739];sigma_RBF=1.1901;signal_var=0.0568\
@@ -457,33 +451,72 @@ m=4700,-l=-301.4534 \
 m=4800,-l=-345.4282 \
 m=4900,-l=-377.5256 \
 m=5000,-l=-431.3101\
-=======\
-PPfull (9568 data pts):\
-nll=-2239.2172; logdet/2=-15816; innerprod/2=4784.0; (N*log(2*pi)/2=8792.4)\
-length_scale=[1.3978,0.0028,2.8966,7.5565];\
-sigma_RBF2=0.8333; signal_var=0.0195;\
-\
-Mauna Loa CO2 (689 data its);\
-nll=287.1063; logdet/2=-797.6392; innerprod/2=451.5968; (N*log(2*pi)/2=633.1486)\
-Cov=SExLIN+SExPER+SExRQ\
-hyperparams: \
-SE1:lengthScale: 22.1915,magnSigma2: 0.0186\
-LIN:coeffSigma2: 0.0186\
-SE2:lengthScale: 109.5098, magnSigma2: 7.4776\
-PER:magnSigma2: 0.7478,lengthScale: 1.4549,period: 1\
-SE3:lengthScale: 2.0639,magnSigma2: 0.4461\
-RQ:lengthScale: 0.4611,magnSigma2: 0.4461,alpha: 1.1796\
-\
-Mauna Loa whitening both x and y:\
-nll=-1991.77; logdet/2=-2973.4; innerprod/2=348.4779; (N*log(2*pi)/2=633.1486)\
-Cov=SExLIN+SExPER+SExRQ\
-hyperparams: \
-SE1:lengthScale: 0.0663,magnSigma2: 0.0224\
-LIN:coeffSigma2: 0.2243\
-SE2:lengthScale: 7.0395, magnSigma2: 0.0916\
-PER:magnSigma2: 0.0916,lengthScale: 1.4347,period: 0.0599\
-SE3:lengthScale: 5.6335,magnSigma2: 36.4999\
-RQ:lengthScale: 5.7433,magnSigma2: 36.4999,alpha: 68057\
-\
-\
-}
+=======
+PPfull (9568 data pts):
+nll=-2239.2172; logdet/2=-15816; innerprod/2=4784.0; (N*log(2*pi)/2=8792.4)
+length_scale=[1.3978,0.0028,2.8966,7.5565];
+sigma_RBF2=0.8333; signal_var=0.0195;
+
+Mauna Loa CO2 (689 data its);
+nll=287.1063; logdet/2=-797.6392; innerprod/2=451.5968; (N*log(2*pi)/2=633.1486)
+Cov=SExLIN+SExPER+SExRQ
+hyperparams: 
+SE1:lengthScale: 22.1915,magnSigma2: 0.0186
+LIN:coeffSigma2: 0.0186
+SE2:lengthScale: 109.5098, magnSigma2: 7.4776
+PER:magnSigma2: 0.7478,lengthScale: 1.4549,period: 1
+SE3:lengthScale: 2.0639,magnSigma2: 0.4461
+RQ:lengthScale: 0.4611,magnSigma2: 0.4461,alpha: 1.1796
+
+Mauna Loa whitening both x and y:
+nll=-1976.1; logdet/2=-2937.7; innerprod/2=328.4550; (N*log(2*pi)/2=633.1486)
+Cov=SExLIN+SExPER+SExRQ
+hyperparams: 
+signal_var=5e-6;
+SE1:lengthScale: 0.5552,magnSigma2: 0.1831
+LIN:coeffSigma2: 0.1831
+SE2:lengthScale: 44.2116, magnSigma2: 29.7963
+PER:magnSigma2: 29.7963,lengthScale: 7.0113,period: 0.0599
+SE3:lengthScale: 3.3270,magnSigma2: 0.0155
+RQ:lengthScale: 0.0045,magnSigma2: 0.0155,alpha: 1.0599
+
+830.8kb so far
+cat mauna40m1.txt mauna40m2.txt mauna40m3.txt mauna40m4.txt mauna40m5.txt mauna40m6.txt mauna40m7.txt mauna40m8.txt mauna40m9.txt mauna40m10.txt mauna40m11.txt mauna40m12.txt mauna40m13.txt mauna40m14.txt mauna40m15.txt mauna40m16.txt mauna40m17.txt mauna40m18.txt mauna40m19.txt mauna40m20.txt > mauna40m.txt
+
+var_gp m=10 initial hyp
+nll=-2780.57,l1=0.10,sf1=0.01,cs2=1.00,l2=10.00,sf2=0.01,lper=1.00,sfper==0.10,l3=1.00,sf3=10.00,lrq=1.00,sfrq==1.00 	%%nll=-949.59
+nll=-38048640.67,l1=0.10,sf1=0.01,cs2=1.00,l2=1.00,sf2=0.10,lper=1.00,sfper==0.01,l3=1.00,sf3=1.00,lrq=1.00,sfrq=10.00	%%nll=-1259.68
+nll=-26307.1,l1=0.01;sf1=0.01;cs2=0.10;l2=10.00;sf2=0.01;lper=1.00;sfper=0.10;l3=10.00;sf3=1.00;lrq=10.00;sfrq=10.00;	%%nll=-1265.56 <<---
+nll=-4537.13,l1=0.10;sf1=0.10;cs2=1.00;l2=1.00;sf2=0.10;lper=1.00;sfper=0.10;l3=10.00;sf3=1.00;lrq=10.00;sfrq=1.00;		%%nll=-975.06
+nll=-1422.25,l1=0.01;sf1=0.01;cs2=0.10;l2=10.00;sf2=0.10;lper=1.00;sfper=0.01;l3=10.00;sf3=1.00;lrq=1.00;sfrq=1.00;		%%nll=-1071.30
+nll=-5149.65,l1=0.10;sf1=0.10;cs2=0.10;l2=1.00;sf2=0.01;lper=1.00;sfper=0.10;l3=1.00;sf3=1.00;lrq=1.00;sfrq=1.00;		%%nll=-671.17
+nll=-1416.95,l1=0.10;sf1=0.10;cs2=0.10;l2=10.00;sf2=0.10;lper=1.00;sfper=0.10;l3=10.00;sf3=1.00;lrq=10.00;sfrq=10.00;	%%nll=-1512.18
+nll=-1477.22,l1=0.10;sf1=0.10;cs2=1.00;l2=10.00;sf2=0.10;lper=1.00;sfper=0.10;l3=1.00;sf3=10.00;lrq=1.00;sfrq=10.00;	%%nll=8499.59
+
+m=20
+nll=-1946.07,l1=0.10;sf1=0.01;cs2=0.10,l2=10.00,sf2=0.10,lper=1.00,sfper=0.01,l3=1.00,sf3=10.00,lrq=1.00,sfrq=10.00
+nll=-1693.86,l1=0.01;sf1=0.10;cs2=1.00,l2=10.00,sf2=0.10,lper=1.00,sfper=0.01,l3=1.00,sf3=1.00,lrq=1.00,sfrq=10.00
+nll=-3252.99,l1=0.01;sf1=0.01;cs2=0.10,l2=10.00,sf2=0.10,lper=1.00,sfper=0.01,l3=1.00,sf3=1.00,lrq=10.00,sfrq=1.00
+nll=-53887.88,l1=0.01;sf1=0.01;cs2=0.10,l2=1.00,sf2=0.01,lper=1.00,sfper=0.01,l3=10.00,sf3=10.00,lrq=10.00,sfrq=10.00
+nll=-2132.90,l1=0.01;sf1=0.10;cs2=0.10,l2=10.00,sf2=0.01,lper=1.00,sfper=0.01,l3=1.00,sf3=10.00,lrq=10.00,sfrq=1.00
+
+m=40
+nll=-1507.18,l1=0.01,sf1=0.10,cs2=1.00,l2=1.00,sf2=0.10,lper=1.00,sfper=0.01,l3=1.00,sf3=10.00,lrq=10.00,sfrq=1.00
+nll=-1683.23,l1=0.10,sf1=0.01,cs2=1.00,l2=1.00,sf2=0.01,lper=1.00,sfper=0.10,l3=1.00,sf3=1.00,lrq=1.00,sfrq=1.00
+nll=-1519.66,l1=0.10,sf1=0.01,cs2=1.00,l2=1.00,sf2=0.10,lper=1.00,sfper=0.10,l3=10.00,sf3=10.00,lrq=10.00,sfrq=10.00
+nll=-1698.27,l1=0.10,sf1=0.01,cs2=1.00,l2=1.00,sf2=0.01,lper=1.00,sfper=0.01,l3=10.00,sf3=1.00,lrq=1.00,sfrq=10.00
+nll=-1581.68,l1=0.10,sf1=0.10,cs2=0.10,l2=1.00,sf2=0.01,lper=1.00,sfper=0.10,l3=1.00,sf3=10.00,lrq=10.00,sfrq=10.00
+nll=-1686.85,l1=0.01,sf1=0.10,cs2=1.00,l2=10.00,sf2=0.10,lper=1.00,sfper=0.10,l3=1.00,sf3=1.00,lrq=10.00,sfrq=10.00
+nll=-1500.91,l1=0.10,sf1=0.10,cs2=0.10,l2=10.00,sf2=0.10,lper=1.00,sfper=0.10,l3=10.00,sf3=10.00,lrq=10.00,sfrq=10.00
+nll=-1512.05,l1=0.01,sf1=0.10,cs2=1.00,l2=10.00,sf2=0.01,lper=1.00,sfper=0.10,l3=1.00,sf3=10.00,lrq=1.00,sfrq=1.00
+
+
+
+
+
+
+
+
+
+
+

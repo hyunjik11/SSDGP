@@ -2,6 +2,7 @@ addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
 %addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
 num_workers=10;
 POOL=parpool('local',num_workers);
+maxNumCompThreads(num_workers); 
 % % Load the data
 %x=h5read('PPdata.h5','/Xtrain');
 %y=h5read('PPdata.h5','/ytrain');
@@ -63,17 +64,6 @@ for m=[10,20,40,80,160,320]
     rff_ip_values=zeros(10,1); rff_ld_values=zeros(10,1);
     
     parfor i=1:10
-%         X_u=datasample(x,m,1,'Replace',false); %each row specifies coordinates of an inducing point. here we randomly sample m data points
-%         lik = lik_gaussian('sigma2', 0.2^2);
-%         gpcf = gpcf_sexp('lengthScale', ones(1,D), 'magnSigma2', 0.2^2);
-%         gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf', gpcf,'X_u', X_u); %var_gp
-%         opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','off');
-%         gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
-%         xu=gp_var.X_u;
-%         [K_big,~]=gp_trcov(gp,[x;xu]);
-%         K_mn=K_big(n+1:n+m,1:n); K_mm=K_big(n+1:n+m,n+1:n+m);
-%         L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
-%         L=L_mm'\K_mn; %L'*L=K_hat=K_mn'*(K_mm\K_mn)
         idx=randsample(n,m);
         K_mn=K(idx,:); K_mm=K(idx,idx);
         L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
