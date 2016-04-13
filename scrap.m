@@ -1,10 +1,10 @@
 %addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
 %addpath(genpath('/Users/hyunjik11/Documents/Machine_Learning/MLCoursework/GaussianProcesses/gpml-matlab-v3.5-2014-12-08'));
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
-num_workers=4;
-%POOL=parpool('local',num_workers);
+% num_workers=10;
+% POOL=parpool('local',num_workers);
 % % Load the data
-load mauna.txt
+%load mauna.txt
 z = mauna(:,2) ~= -99.99;% get rid of missing data
 x = mauna(z,1); y = mauna(z,2); % extract year and CO2 concentration
 x_mean=mean(x); x_std=std(x);
@@ -12,19 +12,16 @@ y_mean=mean(x); y_std=std(y);
 x = (x-x_mean)/x_std; %normalise x;
 y = (y-y_mean)/y_std; %normalise y;
 signal_var=0.1;
-l1=0.1; sf1=0.01;
-cs2=1;
-l2=1; sf2=0.1;
-lper=1; sfper=0.01;per=1/x_std;
-l3=1; sf3=1;
-lrq=1; sfrq=10; alpha=2;
-m=10;
+
+l1=0.10;sf1=0.01;cs2=1.00;l2=1.00;sf2=0.01;lper=1.00;sfper=0.10;l3=1.00;sf3=1.00;lrq=1.00;sfrq=1.00;
+per=1/x_std; alpha=2;
+fprintf('l1=%4.2f,sf1=%4.2f,cs2==%4.2f,l2=%4.2f,sf2=%4.2f,lper=%4.2f,sfper=%4.2f,l3=%4.2f,sf3=%4.2f,lrq=%4.2f,sfrq=%4.2f\n',l1,sf1,cs2,l2,sf2,lper,sfper,l3,sf3,lrq,sfrq);
+for m=[10,20,40,80,160,320]
 % small_set=[0.01,0.1];
 % large_set=[0.1,1];
 % huge_set=[1,10];
 % alpha_set=[2,10];
 % s=[2,2,2,2,2];%signal_var,l,sf,cs2,alpha
-fprintf('m=%d,l1=%4.2f,sf1=%4.2f,cs2==%4.2f,l2=%4.2f,sf2=%4.2f,lper=%4.2f,sfper=%4.2f,l3=%4.2f,sf3=%4.2f,lrq=%4.2f,sfrq=%4.2f\n',m,l1,sf1,cs2,l2,sf2,lper,sfper,l3,sf3,lrq,sfrq);
 nll_values=zeros(10,1);
 parfor i=1:10
 warning('off','all');
@@ -62,7 +59,8 @@ gp_var=gp_optim(gp_var,x,y,'opt',opt);
 nll_values(i)=nll;
 %fprintf('nll=%4.2f,l1=%4.2f,sf1=%4.2f,cs2==%4.2f,l2=%4.2f,sf2=%4.2f,lper=%4.2f,sfper=%4.2f,l3=%4.2f,sf3=%4.2f,lrq=%4.2f,sfrq=%4.2f\n',nll,l1,sf1,cs2,l2,sf2,lper,sfper,l3,sf3,lrq,sfrq);
 end
-fprintf('mean_nll=%4.2f,std_nll=%4.2f',mean(nll_values),std(nll_values));
+fprintf('m=%d,mean_nll=%4.2f,std_nll=%4.2f \n',m,mean(nll_values),std(nll_values));
+end
 %delete(POOL)
 %[K,~]=gp_trcov(gp,x);
 % for m=[10,20,40,80,160,320]
