@@ -576,7 +576,12 @@ m=40,mean_nll=-939.67,std_nll=128.45
 
 
 l1=0.01;sf1=0.10;cs2=1.00;l2=10.00;sf2=0.10;lper=1.00;sfper=0.01;l3=1.00;sf3=1.00;lrq=1.00;sfrq=10.00;
--heron
+m=10,mean_nll=-1168.47,std_nll=229.96
+m=20,mean_nll=-1071.47,std_nll=365.01
+m=40,mean_nll=-1142.58,std_nll=183.70
+m=80,mean_nll=-1032.81,std_nll=403.89
+m=160,mean_nll=-408.88,std_nll=410.86
+Operation terminated by user during gp_optim
 
 l1=0.01;sf1=0.01;cs2=0.10;l2=10.00;sf2=0.10;lper=1.00;sfper=0.01;l3=1.00;sf3=1.00;lrq=10.00;sfrq=1.00;
 m=10,mean_nll=-1218.34,std_nll=163.47 
@@ -596,7 +601,13 @@ Error using fminscg (line 131)
 Initial function value is NaN
 
 l1=0.01;sf1=0.10;cs2=0.10;l2=10.00;sf2=0.01;lper=1.00;sfper=0.01;l3=1.00;sf3=10.00;lrq=10.00;sfrq=1.00;
--anzu
+m=10,mean_nll=-993.18,std_nll=192.70
+m=20,mean_nll=-853.42,std_nll=245.63
+m=40,mean_nll=-811.50,std_nll=147.95
+m=80,mean_nll=-822.21,std_nll=153.62
+m=160,mean_nll=-763.31,std_nll=149.33
+m=320,mean_nll=-404.80,std_nll=59.93
+
 
 l1=0.01;sf1=0.10;cs2=1.00;l2=1.00;sf2=0.10;lper=1.00;sfper=0.01;l3=1.00;sf3=10.00;lrq=10.00;sfrq=1.00;
 m=10,mean_nll=-1052.29,std_nll=197.98
@@ -606,7 +617,11 @@ m=80,mean_nll=-921.69,std_nll=359.19
 Operation terminated by user during gp_e 
 
 l1=0.10;sf1=0.01;cs2=1.00;l2=1.00;sf2=0.01;lper=1.00;sfper=0.10;l3=1.00;sf3=1.00;lrq=1.00;sfrq=1.00;
--wagtail
+m=10,mean_nll=-935.91,std_nll=363.12
+m=20,mean_nll=-1135.28,std_nll=310.37
+m=40,mean_nll=-958.53,std_nll=591.37
+Operation terminated by user during gp_eg 
+
 
 l1=0.10;sf1=0.01;cs2=1.00;l2=1.00;sf2=0.10;lper=1.00;sfper=0.10;l3=10.00;sf3=10.00;lrq=10.00;sfrq=10.00;
 l1=0.10;sf1=0.01;cs2=1.00;l2=1.00;sf2=0.01;lper=1.00;sfper=0.01;l3=10.00;sf3=1.00;lrq=1.00;sfrq=10.00;
