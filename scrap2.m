@@ -1,19 +1,39 @@
-addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
-addpath(genpath('/homes/hkim/Documents/gpml'));
-%x=h5read('PPdata_full.h5','/Xtrain');
-%y=h5read('PPdata_full.h5','/ytrain');
-[n, D] = size(x);
-m=40;
-X_u=datasample(x,m,1,'Replace',false); %each row specifies coordinates of an inducing point. here we randomly sample m data points
-lik = lik_gaussian;
-gpcf = gpcf_sexp('lengthScale', ones(1,D), 'magnSigma2', 0.1);
-gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf', gpcf,'X_u', X_u); %var_gp
+addpath(genpath('/homes/hkim/Documents/GPstuff-4.6')); 
+load solar.mat
+num_workers=10;
+%POOL=parpool('local',num_workers);
 
+meanX=mean(X); meany=mean(y);
+stdX=std(X); stdy=std(y);
+
+yw=(y-meany)/stdy;
+
+[n, D] = size(X);
+per=1; %periodicity of data
+
+
+lik=lik_gaussian();
+gpcf_se1=gpcf_sexp();
+gpcf_se2=gpcf_sexp();
+gpcf_per = gpcf_periodic('period',per,'period_prior',prior_logunif(),'lengthScale_sexp_prior',prior_t());
+gpcf_se=gpcf_sum('cf',{gpcf_se1,gpcf_se2});
+%gpcf=gpcf_prod('cf',{gpcf_per,gpcf_se});
+
+gp=gp_set('lik',lik,'cf',gpcf_se);
 opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','iter','MaxIter',1000);
-gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
+gp=gp_optim(gp,X,yw,'opt',opt);
 
-%w=gp_pak(gp_var,'covariance+likelihood+inducing'); %params that will be optimised
-%[w,~,~,flag]=minimize_stuff(w,@gp_eg,-1000,gp_var,x,y);
-%gp_var=gp_unpak(gp_var,w,'covariance+likelihood+inducing');
+gpcf=gpcf_prod('cf',{gp.cf{1},gpcf_per});
 
-[~,nll]=gp_e([],gp_var,x,y);
+gp=gp_set('lik',gp.lik,'cf',gpcf);
+opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','iter','MaxIter',1000);
+gp=gp_optim(gp,X,yw,'opt',opt);
+
+
+pred=gp_pred(gp,X,yw,X);
+pred=pred*stdy+meany;
+scatter(X,y);
+hold on
+plot(X,pred);
+
+%delete(POOL)
