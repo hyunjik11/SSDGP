@@ -1,39 +1,30 @@
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6')); 
-load solar.mat
+load concrete.mat
 num_workers=10;
 %POOL=parpool('local',num_workers);
 
-meanX=mean(X); meany=mean(y);
-stdX=std(X); stdy=std(y);
+x=X;
+[n,D]=size(x);
+x_mean=mean(x); x_std=std(x);
+y_mean=mean(y); y_std=std(y);
+xw = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
+yw = (y-y_mean)/y_std; %normalise y;
 
-yw=(y-meany)/stdy;
+pl=prior_gaussian('s2',0.5);
+lik = lik_gaussian();
+gpcf= gpcf_sexp('lengthScale_prior',pl); 
+%gpcf_lin=gpcf_linear('coeffSigma2',cs2);
 
-[n, D] = size(X);
-per=1; %periodicity of data
-
-
-lik=lik_gaussian();
-gpcf_se1=gpcf_sexp();
-gpcf_se2=gpcf_sexp();
-gpcf_per = gpcf_periodic('period',per,'period_prior',prior_logunif(),'lengthScale_sexp_prior',prior_t());
-gpcf_se=gpcf_sum('cf',{gpcf_se1,gpcf_se2});
-%gpcf=gpcf_prod('cf',{gpcf_per,gpcf_se});
-
-gp=gp_set('lik',lik,'cf',gpcf_se);
+gp=gp_set('lik',lik,'cf',gpcf);
 opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','iter','MaxIter',1000);
-gp=gp_optim(gp,X,yw,'opt',opt);
+gp=gp_optim(gp,xw,yw,'opt',opt);
+[~,nll]=gp_e([],gp,xw,yw);
 
-gpcf=gpcf_prod('cf',{gp.cf{1},gpcf_per});
-
-gp=gp_set('lik',gp.lik,'cf',gpcf);
-opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','iter','MaxIter',1000);
-gp=gp_optim(gp,X,yw,'opt',opt);
-
-
-pred=gp_pred(gp,X,yw,X);
-pred=pred*stdy+meany;
-scatter(X,y);
-hold on
-plot(X,pred);
+pred=gp_pred(gp,xw,yw,xw);
+pred=pred*y_std+y_mean;
+RMSE=sqrt(sum((y-pred).^2)/n);
+%scatter(x,y);
+%hold on
+%plot(x,pred);
 
 %delete(POOL)

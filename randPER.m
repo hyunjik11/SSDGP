@@ -20,7 +20,7 @@ if sum(p)<1-2*epsilon
 else p=p/sum(p); %normalise. sum(p) should be close to 1
 end
 z=discretesample(x',p',m);
-
+z=reshape(z,length(z),1);
 end
 
 
