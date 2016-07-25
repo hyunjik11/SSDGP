@@ -12,10 +12,21 @@ yw = (y-y_mean)/y_std; %normalise y;
 
 pl=prior_gaussian('s2',0.5);
 lik = lik_gaussian();
+gpcf_wn=gpcf_prod('cf',{gpcf_constant(),gpcf_cat()});
 gpcf= gpcf_sexp('lengthScale_prior',pl); 
-%gpcf_lin=gpcf_linear('coeffSigma2',cs2);
+gpcf_lin4=gpcf_linear('selectedVariables',4);
+gpcf_se1=gpcf_sexp('selectedVariable',1,'lengthScale_prior',pl);
+gpcf_se2=gpcf_sexp('selectedVariable',2,'lengthScale_prior',pl);
+gpcf_se4=gpcf_sexp('selectedVariable',4,'lengthScale_prior',pl);
+gpcf_se7=gpcf_sexp('selectedVariable',7,'lengthScale_prior',pl);
+gpcf_se8=gpcf_sexp('selectedVariable',8,'lengthScale_prior',pl);
+gpcf1=gpcf_prod('cf',{gpcf_wn,gpcf_lin4});
+gpcf2=gpcf_prod('cf',{gpcf_se1,gpcf_se7});
+gpcf3=gpcf_prod('cf',{gpcf_se1,gpcf_se2,gpcf_se4});
+gpcf4=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se8});
+gpcf5=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se7,gpcf_se8,gpcf_lin4});
 
-gp=gp_set('lik',lik,'cf',gpcf);
+gp=gp_set('lik',lik,'cf',{gpcf1,gpcf2,gpcf3,gpcf4,gpcf5});
 opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','iter','MaxIter',1000);
 gp=gp_optim(gp,xw,yw,'opt',opt);
 [~,nll]=gp_e([],gp,xw,yw);
