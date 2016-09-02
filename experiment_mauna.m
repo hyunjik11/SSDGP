@@ -22,16 +22,21 @@ if parallel
     numiter=10;
 else numiter=1;
 end
-nll_table=zeros(numiter,6);
-naive_nld_table=zeros(numiter,6);
-rff_nld_table=zeros(numiter,6);
-cg_obj_table=zeros(numiter,6);
-pcg_obj_table=zeros(numiter,6);
-pcg_objf_table=zeros(numiter,6);
-pcg_objp_table=zeros(numiter,6);
+m_values=[10,20,40,80,160,320];
+lm=length(m_values);
+lb_table=zeros(numiter,lm);
+naive_nld_table=zeros(1,lm);
+rff_nld_table=zeros(numiter,lm);
+cg_obj_table=zeros(1,lm);
+pcg_obj_table=zeros(1,lm);
+pcg_objf_table=zeros(1,lm);
+pcg_objp_table=zeros(1,lm);
+nld = zeros(1,lm);
+nip = zeros(1,lm);
+gp_var_cell=cell(1,10);
 
 if ~parallel
-for m=[10,20,40,80,160,320]
+for m=m_values
 fprintf('m=%d \n',m);
 i=1;
 %parfor i=1:10
@@ -134,7 +139,7 @@ pcg_objf=minsofar(pcg_objf);
 pcg_objp=minsofar(pcg_objp);
 
 %gather all results
-nll_table(ind)=nll;
+lb_table(ind)=-nll;
 naive_nld_table(ind)=naive_nld;
 rff_nld_table(ind)=rff_nld;
 cg_obj_table(ind)=cg_obj(end);
@@ -149,7 +154,7 @@ ind=ind+1;
 end
 
 else
-for m=[10,20,40,80,160,320]
+for m=m_values
 fprintf('m=%d \n',m);
 parfor i=1:10
 rng(i);
@@ -181,10 +186,19 @@ gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood+inducing');
 opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','off','MaxIter',1000);
 gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
 [~,nll]=gp_e([],gp_var,x,y);
-signal_var=gp_var.lik.sigma2;
 
-%%% Extract inducing points from VAR %%%
+%%% Record ml and gp_var %%%
+lb_table(i,ind)=-nll;
+gp_var_cell{i} = gp_var;
+fprintf('optim for worker %d done \n',i);
+end
+
+%%% Get index of best var LB %%%
+[~,maxind]=max(lb_table(:,ind));
+gp_var = gp_var_cell{maxind};
+%%% Extract inducing points and signal_var from VAR %%%
 xu=gp_var.X_u;
+signal_var=gp_var.lik.sigma2;
 
 %%% Compute UB to NLD %%%
 K_mn=gp_cov(gp_var,xu,x); K_mm=gp_trcov(gp_var,xu);
@@ -192,25 +206,17 @@ L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
 L=L_mm'\K_mn; %L'*L=K_hat=K_mn'*(K_mm\K_mn)
 A=L*L'+signal_var*eye(m);
 L_naive=chol(A);
-naive_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_naive)));
+naive_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_naive))); %the first term comes from matrix identity.
+% so this is an upper bound on -logdet(K+signal_var*I)
 K_naive=L'*L;
 
-%%% Compute RFF and use as UB to NLD %%%
-l1=gp_var.cf{1}.cf{1}.lengthScale; sf1=gp_var.cf{1}.cf{1}.magnSigma2;
-cs2=gp_var.cf{1}.cf{2}.coeffSigma2;
-l2=gp_var.cf{2}.cf{1}.lengthScale; sf2=gp_var.cf{2}.cf{1}.magnSigma2;
-lper=gp_var.cf{2}.cf{2}.lengthScale; sfper=gp_var.cf{2}.cf{2}.magnSigma2; per=gp_var.cf{2}.cf{2}.period;
-l3=gp_var.cf{3}.lengthScale; sf3=gp_var.cf{3}.magnSigma2;
-idx1=randsample(m^2,m);
-idx2=randsample(2*m,m);
-idx3=randsample(2*m,m);
-phi=maunaRFF(x,m,l1,sf1,cs2,l2,sf2,lper,per,sfper,l3,sf3,idx1,idx2,idx3);
-Ar=phi*phi'+signal_var*eye(m);
-L_rff=chol(Ar);
-rff_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_rff)));
+[K,C]=gp_trcov(gp_var,x);
+%%% Compute true nld, nip and hence ml with hyp in var_gp %%%
+Ltemp = chol(C); ztemp = Ltemp'\y ;
+nld(ind) = -sum(log(diag(Ltemp)));
+nip(ind) = -sum(ztemp.^2)/2;
 
 %%% Compute UB to NIP %%%
-[K,C]=gp_trcov(gp_var,x);
 [~,~,~,~,cg_resvec,cg_obj]=cgs_obj(C,y,[],m);
 K_fic=K_naive+diag(diag(K)-diag(K_naive));
 dinv=1./(diag(K)-diag(K_naive)+signal_var);
@@ -233,22 +239,37 @@ pcg_obj=minsofar(pcg_obj);
 pcg_objf=minsofar(pcg_objf);
 pcg_objp=minsofar(pcg_objp);
 
-%gather all results
-nll_table(i,ind)=nll;
-naive_nld_table(i,ind)=naive_nld;
+% Gather all results
+cg_obj_table(ind)=cg_obj(end);
+pcg_obj_table(ind)=pcg_obj(end);
+pcg_objf_table(ind)=pcg_objf(end);
+pcg_objp_table(ind)=pcg_objp(end);
+naive_nld_table(ind)=naive_nld;
+
+%%% Compute RFF and use as UB to NLD %%%
+l1=gp_var.cf{1}.cf{1}.lengthScale; sf1=gp_var.cf{1}.cf{1}.magnSigma2;
+cs2=gp_var.cf{1}.cf{2}.coeffSigma2;
+l2=gp_var.cf{2}.cf{1}.lengthScale; sf2=gp_var.cf{2}.cf{1}.magnSigma2;
+lper=gp_var.cf{2}.cf{2}.lengthScale; sfper=gp_var.cf{2}.cf{2}.magnSigma2; per=gp_var.cf{2}.cf{2}.period;
+l3=gp_var.cf{3}.lengthScale; sf3=gp_var.cf{3}.magnSigma2;
+
+parfor i=1:10
+rng(i);
+idx1=randsample(m^2,m);
+idx2=randsample(2*m,m);
+idx3=randsample(2*m,m);
+phi=maunaRFF(x,m,l1,sf1,cs2,l2,sf2,lper,per,sfper,l3,sf3,idx1,idx2,idx3);
+Ar=phi*phi'+signal_var*eye(m);
+L_rff=chol(Ar);
+rff_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_rff)));
 rff_nld_table(i,ind)=rff_nld;
-cg_obj_table(i,ind)=cg_obj(end);
-pcg_obj_table(i,ind)=pcg_obj(end);
-pcg_objf_table(i,ind)=pcg_objf(end);
-pcg_objp_table(i,ind)=pcg_objp(end);
-
-fprintf('worker %d done \n',i);
+fprintf('RFF for worker %d done \n',i);
 end
-
 ind=ind+1;
 end
-delete(POOL)
+ml = nld + nip - n*log(2*pi)/2;
 end
+delete(POOL)
 
 
 
