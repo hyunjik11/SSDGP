@@ -2,11 +2,11 @@ figure();
 subplot(1,3,1);
 hold on
 m_values=[1,2,3,4,5,6];
-nll = 241.31;
+nll = -2029.864;
 plot(m_values,-nll*ones(size(m_values)));
 plot(m_values,ml);
 
-%scatter(reshape(repmat(m_values,10,1),60,1),reshape(lb_table,60,1),'gx');
+scatter(reshape(repmat(m_values,10,1),60,1),reshape(lb_table,60,1),'gx');
 set(gca,'XTick',[1 2 3 4 5 6]);
 set(gca,'XTickLabel',[10 20 40 80 160 320]);
 legend('fullGP','exact','Var LB')
