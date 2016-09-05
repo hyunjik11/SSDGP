@@ -2,7 +2,7 @@ addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
 addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
 parallel=1;
 if parallel
-    num_workers=20;
+    num_workers=4;
     POOL=parpool('local',num_workers);
 end
 warning('off','all');
@@ -20,7 +20,7 @@ y = (y-y_mean)/y_std; %normalise y;
 %%%%%%%%%%%%%%%%%%%
 ind=1;
 if parallel
-    numiter=40;
+    numiter=10;
 else numiter=1;
 end
 m_values=[10,20,40,80,160,320];
@@ -149,7 +149,7 @@ else
 for m=m_values
 fprintf('m=%d \n',m);
 parfor i=1:numiter
-
+rng(i+100)
 warning('off','all');
 %t=getCurrentTask(); k=t.ID;
 %filename=['experiment_results/mauna10m',num2str(k),'.txt'];
@@ -167,7 +167,8 @@ gpcf2=gpcf_prod('cf',{gpcf_se2,gpcf_per});
 gpcf3=se_init(x,y);
 
 %%% Optimise gp_var %%%
-[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+%[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+X_u=datasample(x,m,1,'Replace',false); %random initialisation
 gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3},'X_u', X_u); 
 gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
 opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
@@ -241,7 +242,6 @@ lper=gp_var.cf{2}.cf{2}.lengthScale; sfper=gp_var.cf{2}.cf{2}.magnSigma2; per=gp
 l3=gp_var.cf{3}.lengthScale; sf3=gp_var.cf{3}.magnSigma2;
 
 parfor i=1:numiter
-rng(i);
 idx1=randsample(m^2,m);
 idx2=randsample(2*m,m);
 idx3=randsample(2*m,m);
@@ -252,6 +252,7 @@ rff_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_rff)));
 rff_nld_table(i,ind)=rff_nld;
 %fprintf('RFF for worker %d done \n',i);
 end
+    fprintf('ml=%4.3f \n',nld(ind)+nip(ind)-n*log(2*pi)/2);
     fprintf('SE1 magnSigma2=%4.3f, l=%4.3f \n',...
         gp_var.cf{1}.cf{1}.magnSigma2, gp_var.cf{1}.cf{1}.lengthScale);
     fprintf('LIN coeffSigma2=%4.3f \n',...
@@ -262,6 +263,7 @@ end
         gp_var.cf{2}.cf{2}.magnSigma2, gp_var.cf{2}.cf{2}.lengthScale, gp_var.cf{2}.cf{2}.period);
     fprintf('SE3 magnSigma2=%4.3f, l=%4.3f \n',...
         gp_var.cf{3}.magnSigma2, gp_var.cf{3}.lengthScale);
+    fprintf('lik sigma2=%4.8f \n',gp_var.lik.sigma2);
 
 ind=ind+1;
 end

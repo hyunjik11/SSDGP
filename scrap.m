@@ -1,94 +1,177 @@
-%addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
-%addpath(genpath('/Users/hyunjik11/Documents/Machine_Learning/MLCoursework/GaussianProcesses/gpml-matlab-v3.5-2014-12-08'));
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
-%addpath(genpath('/homes/hkim/Documents/gpml'));
-num_workers=10;
-%POOL=parpool('local',num_workers);
-% % Load the data
-%load mauna.txt
-z = mauna(:,2) ~= -99.99;% get rid of missing data
+addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
+parallel=1;
+if parallel
+    num_workers=4;
+    POOL=parpool('local',num_workers);
+end
+warning('off','all');
+%%% load and set up data %%%
+load mauna.txt
+z = mauna(:,2) ~= -99.99; % get rid of missing data
 x = mauna(z,1); y = mauna(z,2); % extract year and CO2 concentration
+X = x; Y = y;
 x_mean=mean(x); x_std=std(x);
-y_mean=mean(x); y_std=std(y);
+y_mean=mean(y); y_std=std(y);
 x = (x-x_mean)/x_std; %normalise x;
 y = (y-y_mean)/y_std; %normalise y;
-signal_var=0.1;
+[n,D]=size(x);
 
-l1=0.10;sf1=0.1;cs2=1.00;l2=1.00;sf2=0.1;lper=1.00;sfper=0.1;l3=1.00;sf3=0.1;lrq=1.00;sfrq=0.1;
-per=1/x_std; alpha=2;
-%fprintf('l1=%4.2f,sf1=%4.2f,cs2=%4.2f,l2=%4.2f,sf2=%4.2f,lper=%4.2f,sfper=%4.2f,l3=%4.2f,sf3=%4.2f,lrq=%4.2f,sfrq=%4.2f\n',l1,sf1,cs2,l2,sf2,lper,sfper,l3,sf3,lrq,sfrq);
-nll_mean=zeros(6,1);
-nll_std=zeros(6,1);
-nll_table=zeros(10,6);
+%%%%%%%%%%%%%%%%%%%
 ind=1;
-for m=[10,20,40,80,160,320]
-% small_set=[0.01,0.1];
-% large_set=[0.1,1];
-% huge_set=[1,10];
-% alpha_set=[2,10];
-% s=[2,2,2,2,2];%signal_var,l,sf,cs2,alpha
-nll_values=zeros(10,1);
-parfor i=1:10
+if parallel
+    numiter=10;
+else numiter=1;
+end
+m_values=[10,20,40,80,160,320];
+lm=length(m_values);
+lb_table=zeros(numiter,lm);
+naive_nld_table=zeros(1,lm);
+rff_nld_table=zeros(numiter,lm);
+cg_obj_table=zeros(1,lm);
+pcg_obj_table=zeros(1,lm);
+pcg_objf_table=zeros(1,lm);
+pcg_objp_table=zeros(1,lm);
+nld = zeros(1,lm);
+nip = zeros(1,lm);
+gp_var_cell=cell(1,numiter);
+idx_u_cell=cell(1,numiter);
+
+for m=m_values
+fprintf('m=%d \n',m);
+parfor i=1:numiter
+%rng(i+100)
 warning('off','all');
 %t=getCurrentTask(); k=t.ID;
 %filename=['experiment_results/mauna10m',num2str(k),'.txt'];
 %fileID=fopen(filename,'at');
-pl=prior_gaussian('s2',0.5);
-lik = lik_gaussian('sigma2', signal_var);
-gpcf_se1 = gpcf_sexp('lengthScale', l1, 'magnSigma2',sf1,'lengthScale_prior',pl); 
-gpcf_lin=gpcf_linear('coeffSigma2',cs2);
-gpcf1=gpcf_prod('cf',{gpcf_se1,gpcf_lin});
-gpcf_se2 = gpcf_sexp('lengthScale', l2, 'magnSigma2', sf2,'lengthScale_prior',pl);
-gpcf_per = gpcf_periodic('lengthScale',lper,'period',per,'magnSigma2',sfper,'lengthScale_prior',pl);
-gpcf2=gpcf_prod('cf',{gpcf_se2,gpcf_per});
-gpcf_se3 = gpcf_sexp('lengthScale', l3, 'magnSigma2', sf3,'lengthScale_prior',pl); 
-%gpcf_rat = gpcf_rq('lengthScale',lrq,'magnSigma2',sfrq,'alpha',alpha,'lengthScale_prior',pl); 
-%gpcf3=gpcf_prod('cf',{gpcf_se3,gpcf_rat});
-rng(i);
-%fprintf('rng=%d \n',i);
-[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
-%X_u=datasample(x,m,1,'Replace',false); %random initialisation
-gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf_se3},'X_u', X_u); 
-gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood+inducing');
 
-opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','off','MaxIter',1000);
-gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
-[~,nll]=gp_e([],gp_var,x,y);
-nll_values(i)=nll;
-fprintf('worker %d done \n',i);
+%%% Initialise gp_var %%%
+if ind == 1 || mod(i,2)==0 %half-half
+    lik=lik_init(y);
+    gpcf_se1=se_init(x,y);
+    gpcf_lin=lin_init();
+    gpcf_se2=se_init(x,y);
+    gpcf_per=per_init(x,y);
+    gpcf1=gpcf_prod('cf',{gpcf_se1,gpcf_lin});
+    gpcf2=gpcf_prod('cf',{gpcf_se2,gpcf_per});
+    gpcf3=se_init(x,y);
+    %[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+    [X_u,idx]=datasample(x,m,1,'Replace',false); %random initialisation
+    idx_u_cell{i}=idx; %store indices of subset
+    gp_var_loc = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3},'X_u', X_u); 
+    gp_var_loc = gp_set(gp_var_loc, 'infer_params', 'covariance+likelihood');
+else
+    weights = 1e-10*ones(1,size(x,1)); %weights for sampling
+    weights(idx_u)=1; %make sure samples idx_u are included
+    [X_u,idx] = datasample(x,m,1,'Replace',false,'Weights',weights);
+    idx_u_cell{i}=idx; %store indices of subset
+    gp_var_loc = gp_var;
+    gp_var_loc.X_u = X_u; %keep hyperparams & ind pts the same, but add more ind pts.
 end
-nll_mean(ind)=mean(nll_values);
-nll_std(ind)=std(nll_values);
-nll_table(:,ind)=nll_values;
+
+%%% Optimise gp_var %%%
+opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
+gp_var_loc=gp_optim(gp_var_loc,x,y,'opt',opt,'optimf',@fminscg);
+[~,nll]=gp_e([],gp_var_loc,x,y);
+
+%%% Record ml and gp_var %%%
+lb_table(i,ind)=-nll;
+gp_var_cell{i} = gp_var_loc;
+%fprintf('optim for worker %d done \n',i);
+end
+
+%%% Get index of best var LB %%%
+[~,maxind]=max(lb_table(:,ind));
+gp_var = gp_var_cell{maxind};
+idx_u = idx_u_cell{maxind};
+%%% Extract inducing points and signal_var from VAR %%%
+xu=gp_var.X_u;
+signal_var=gp_var.lik.sigma2;
+
+%%% Compute UB to NLD %%%
+K_mn=gp_cov(gp_var,xu,x); K_mm=gp_trcov(gp_var,xu);
+L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
+L=L_mm'\K_mn; %L'*L=K_hat=K_mn'*(K_mm\K_mn)
+A=L*L'+signal_var*eye(m);
+L_naive=chol(A);
+naive_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_naive))); %the first term comes from matrix identity.
+% so this is an upper bound on -logdet(K+signal_var*I)
+K_naive=L'*L;
+
+[K,C]=gp_trcov(gp_var,x);
+%%% Compute true nld, nip and hence ml with hyp in var_gp %%%
+Ltemp = chol(C); ztemp = Ltemp'\y ;
+nld(ind) = -sum(log(diag(Ltemp)));
+nip(ind) = -sum(ztemp.^2)/2;
+
+%%% Compute UB to NIP %%%
+[~,~,~,~,cg_resvec,cg_obj]=cgs_obj(C,y,[],m);
+K_fic=K_naive+diag(diag(K)-diag(K_naive));
+dinv=1./(diag(K)-diag(K_naive)+signal_var);
+Dinv=diag(dinv); %D=diag(K-K_naive)+signal_var*eye(n)
+Af=L*Dinv*L'+eye(m);
+%function handle which gives (K_naive+signal_var*eye(n))\x
+myfun = @(w) (w-L'*(A\(L*w)))/signal_var;
+%function handle which gives (K_fic+signal_var*eye(n))\x
+myfunf = @(w) (w-L'*(Af\(L*(w.*dinv)))).*dinv;
+%funcion handle which gives (K_pic+signal_var*eye(n))\x
+[Kb,invfun]=blockdiag(K-K_naive,m,signal_var); %invfun is fhandle which gives (Kb+signal_var*eye(n))\w
+K_pic=K_naive+Kb;
+Ap=L*invfun(L')+eye(m);
+myfunp = @(w) invfun(w-L'*(Ap\(L*invfun(w))));
+[~,~,~,~,pcg_resvec,pcg_obj]=cgs_obj(C,y,[],m,myfun);
+[~,~,~,~,pcg_resvecf,pcg_objf]=cgs_obj(C,y,[],m,myfunf);
+[~,~,~,~,pcg_resvecp,pcg_objp]=cgs_obj(C,y,[],m,myfunp); 
+cg_obj=minsofar(cg_obj);
+pcg_obj=minsofar(pcg_obj);
+pcg_objf=minsofar(pcg_objf);
+pcg_objp=minsofar(pcg_objp);
+
+% Gather all results
+cg_obj_table(ind)=cg_obj(end);
+pcg_obj_table(ind)=pcg_obj(end);
+pcg_objf_table(ind)=pcg_objf(end);
+pcg_objp_table(ind)=pcg_objp(end);
+naive_nld_table(ind)=naive_nld;
+
+%%% Compute RFF and use as UB to NLD %%%
+l1=gp_var.cf{1}.cf{1}.lengthScale; sf1=gp_var.cf{1}.cf{1}.magnSigma2;
+cs2=gp_var.cf{1}.cf{2}.coeffSigma2;
+l2=gp_var.cf{2}.cf{1}.lengthScale; sf2=gp_var.cf{2}.cf{1}.magnSigma2;
+lper=gp_var.cf{2}.cf{2}.lengthScale; sfper=gp_var.cf{2}.cf{2}.magnSigma2; per=gp_var.cf{2}.cf{2}.period;
+l3=gp_var.cf{3}.lengthScale; sf3=gp_var.cf{3}.magnSigma2;
+
+parfor i=1:numiter
+idx1=randsample(m^2,m);
+idx2=randsample(2*m,m);
+idx3=randsample(2*m,m);
+phi=maunaRFF(x,m,l1,sf1,cs2,l2,sf2,lper,per,sfper,l3,sf3,idx1,idx2,idx3);
+Ar=phi*phi'+signal_var*eye(m);
+L_rff=chol(Ar);
+rff_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_rff)));
+rff_nld_table(i,ind)=rff_nld;
+%fprintf('RFF for worker %d done \n',i);
+end
+    fprintf('ml=%4.3f \n',nld(ind)+nip(ind)-n*log(2*pi)/2);
+    fprintf('SE1 magnSigma2=%4.3f, l=%4.3f \n',...
+        gp_var.cf{1}.cf{1}.magnSigma2, gp_var.cf{1}.cf{1}.lengthScale);
+    fprintf('LIN coeffSigma2=%4.3f \n',...
+        gp_var.cf{1}.cf{2}.coeffSigma2);
+    fprintf('SE2 magnSigma2=%4.3f, l=%4.3f \n',...
+        gp_var.cf{2}.cf{1}.magnSigma2, gp_var.cf{2}.cf{1}.lengthScale);
+    fprintf('PER magnSigma2=%4.3f, l=%4.3f, per=%4.3f \n',...
+        gp_var.cf{2}.cf{2}.magnSigma2, gp_var.cf{2}.cf{2}.lengthScale, gp_var.cf{2}.cf{2}.period);
+    fprintf('SE3 magnSigma2=%4.3f, l=%4.3f \n',...
+        gp_var.cf{3}.magnSigma2, gp_var.cf{3}.lengthScale);
+    fprintf('lik sigma2=%4.8f \n',gp_var.lik.sigma2);
+
 ind=ind+1;
-fprintf('m=%d done \n',m);
 end
+ml = nld + nip - n*log(2*pi)/2;
 delete(POOL)
+
+
 %w=gp_pak(gp_var,'covariance+likelihood+inducing'); %params that will be optimised
 %w=minimize_stuff(w,@gp_eg,-1000,gp_var,x,y);
 %gp_var=gp_unpak(gp_var,w,'covariance+likelihood+inducing');
-
-% gp=gp_set('lik',lik,'cf',{gpcf1,gpcf2,gpcf3});
-% opt=optimset('TolFun',1e-3,'TolX',1e-4,'Display','iter','MaxIter',1000);
-% gp=gp_optim(gp,x,y,'opt',opt);
-%[~,nll]=gp_e([],gp,x,y);
-%[~,nll]=gp_e([],gp_var,x,y);
-% zz = ((2016+1/24:1/12:2024-1/24)'-x_mean)/x_std;
-% [mu,s2]=gp_pred(gp_var,x,y,zz);
-% f = [mu+2*sqrt(s2); flip(mu-2*sqrt(s2),1)]*y_std + y_mean;
-% figure();
-% fill([zz*x_std+x_mean; flip(zz*x_std+x_mean,1)], f, [7 7 7]/8);  hold on       % show predictions
-% plot(x*x_std+x_mean,y*y_std+y_mean,'b.'); plot(zz*x_std+x_mean,mu*y_std+y_mean,'r.');
-%nll_values(i)=nll;
-%fprintf('nll=%4.2f,l1=%4.2f,sf1=%4.2f,cs2=%4.2f,l2=%4.2f,sf2=%4.2f,lper=%4.2f,sfper=%4.2f,l3=%4.2f,sf3=%4.2f,lrq=%4.2f,sfrq=%4.2f\n',nll,l1,sf1,cs2,l2,sf2,lper,sfper,l3,sf3,lrq,sfrq);
-%end
-%fprintf('m=%d,mean_nll=%4.2f,std_nll=%4.2f \n',m,mean(nll_values),std(nll_values));
-%end
-%[K,~]=gp_trcov(gp,x);
-% for m=[10,20,40,80,160,320]
-%     idx1=randsample(m^2,m);
-%     idx2=randsample(2*m,m);
-%     idx3=randsample(2*m,m);
-%     phi=maunaRFF(x,m,l1,sf1,cs2,l2,sf2,lper,per,sfper,l3,sf3,lrq,sfrq,alpha,idx1,idx2,idx3);
-%     fprintf('frob=%4.2f\n',norm(phi'*phi-K,'fro'));
-% end

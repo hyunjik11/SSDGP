@@ -161,7 +161,8 @@ gpcf_per = per_init(x,y);
 gpcf=gpcf_prod('cf',{gpcf_se,gpcf_per});
 
 %%% Optimise gp_var %%%
-[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+%[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+X_u=datasample(x,m,1,'Replace',false); %random initialisation
 gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',gpcf,'X_u', X_u); 
 gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
 opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
@@ -171,7 +172,7 @@ gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
 %%% Record ml and gp_var %%%
 lb_table(i,ind)=-nll;
 gp_var_cell{i} = gp_var;
-fprintf('optim for worker %d done \n',i);
+%fprintf('optim for worker %d done \n',i);
 end
 
 %%% Get index of best var LB %%%
@@ -238,8 +239,16 @@ Ar=phi*phi'+signal_var*eye(m);
 L_rff=chol(Ar);
 rff_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_rff)));
 rff_nld_table(i,ind)=rff_nld;
-fprintf('RFF for worker %d done \n',i);
+%fprintf('RFF for worker %d done \n',i);
 end
+fprintf('ml=%4.3f \n',nld(ind)+nip(ind)-n*log(2*pi)/2);
+fprintf('PER magnSigma2=%4.3f, period=%4.3f \n',...
+    gp_var.cf{1}.cf{2}.magnSigma2, gp_var.cf{1}.cf{2}.period);
+fprintf('SE1 magnSigma2=%4.3f, l=%4.3f \n',...
+    gp_var.cf{1}.cf{1}.cf{1}.magnSigma2, gp_var.cf{1}.cf{1}.cf{1}.lengthScale);
+fprintf('SE2 magnSigma2=%4.3f, l=%4.3f \n',...
+    gp_var.cf{1}.cf{1}.cf{2}.magnSigma2, gp_var.cf{1}.cf{1}.cf{2}.lengthScale);
+fprintf('lik sigma2=%4.8f \n',gp_var.lik.sigma2);
 
 ind=ind+1;
 end

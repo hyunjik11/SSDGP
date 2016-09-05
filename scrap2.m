@@ -104,9 +104,9 @@ if solar
         fprintf('PER magnSigma2=%4.3f, period=%4.3f \n',...
             gp_var.cf{1}.cf{2}.magnSigma2, gp_var.cf{1}.cf{2}.period);
         fprintf('SE1 magnSigma2=%4.3f, l=%4.3f \n',...
-            gp.cf{1}.cf{1}.cf{1}.magnSigma2, gp.cf{1}.cf{1}.cf{1}.lengthScale);
+            gp_var.cf{1}.cf{1}.cf{1}.magnSigma2, gp_var.cf{1}.cf{1}.cf{1}.lengthScale);
         fprintf('SE2 magnSigma2=%4.3f, l=%4.3f \n',...
-            gp.cf{1}.cf{1}.cf{2}.magnSigma2, gp.cf{1}.cf{1}.cf{2}.lengthScale);
+            gp_var.cf{1}.cf{1}.cf{2}.magnSigma2, gp_var.cf{1}.cf{1}.cf{2}.lengthScale);
     end
     figure(1000); plot(-nll);
     figure(1001); plot(RMSE);
@@ -195,15 +195,15 @@ if mauna
         %scatter(gp_var.X_u,300*ones(m,1))
         hold off
         fprintf('SE1 magnSigma2=%4.3f, l=%4.3f \n',...
-            gp.cf{1}.cf{1}.magnSigma2, gp.cf{1}.cf{1}.lengthScale);
+            gp_var.cf{1}.cf{1}.magnSigma2, gp_var.cf{1}.cf{1}.lengthScale);
         fprintf('LIN coeffSigma2=%4.3f \n',...
-            gp.cf{1}.cf{2}.coeffSigma2);
+            gp_var.cf{1}.cf{2}.coeffSigma2);
         fprintf('SE2 magnSigma2=%4.3f, l=%4.3f \n',...
-            gp.cf{2}.cf{1}.magnSigma2, gp.cf{2}.cf{1}.lengthScale);
+            gp_var.cf{2}.cf{1}.magnSigma2, gp_var.cf{2}.cf{1}.lengthScale);
         fprintf('PER magnSigma2=%4.3f, l=%4.3f, per=%4.3f \n',...
-            gp.cf{2}.cf{2}.magnSigma2, gp.cf{2}.cf{2}.lengthScale, gp.cf{2}.cf{2}.period);
+            gp_var.cf{2}.cf{2}.magnSigma2, gp_var.cf{2}.cf{2}.lengthScale, gp_var.cf{2}.cf{2}.period);
         fprintf('SE3 magnSigma2=%4.3f, l=%4.3f \n',...
-            gp.cf{3}.magnSigma2, gp.cf{3}.lengthScale);
+            gp_var.cf{3}.magnSigma2, gp_var.cf{3}.lengthScale);
     end
     figure(1000); plot(-nll);
     figure(1001); plot(RMSE);
