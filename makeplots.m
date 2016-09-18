@@ -2,8 +2,9 @@ figure();
 subplot(1,3,1);
 hold on
 m_values=[1,2,3,4,5,6];
-nll = -2029.864; % mauna full GP
+%nll = -2029.864; % mauna full GP
 %nll = 83.864; % solar full GP
+nll = 248.82; % concrete full GP
 plot(m_values,-nll*ones(size(m_values)));
 plot(m_values,ml);
 
@@ -19,10 +20,11 @@ subplot(1,3,2);
 hold on
 plot(m_values,nld,'linewidth',2);
 plot(m_values,naive_nld_table,'linewidth',1);
-scatter(reshape(repmat(m_values,10,1),60,1),reshape(rff_nld_table,60,1),'x');
+%scatter(reshape(repmat(m_values,10,1),60,1),reshape(rff_nld_table,60,1),'x');
 set(gca,'XTick',[1 2 3 4 5 6]);
 set(gca,'XTickLabel',[10 20 40 80 160 320]);
-legend('exact','Nystrom NLD UB','RFF NLD UB')
+%legend('exact','Nystrom NLD UB','RFF NLD UB')
+legend('exact','Nystrom NLD UB')
 ylabel('NLD')
 xlabel('m')
 hold off

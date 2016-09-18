@@ -1,8 +1,13 @@
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
 addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
-parallel=1;
+parallel=1; subset=1;
+if subset
+    fprintf('Using subset of training with rand init \n')
+else
+    fprintf('Using Kmeans with rand init \n')
+end
 if parallel
-    num_workers=4;
+    num_workers=10;
     POOL=parpool('local',num_workers);
 end
 warning('off','all');
@@ -54,7 +59,11 @@ gpcf_per = per_init(x,y);
 gpcf=gpcf_prod('cf',{gpcf_se,gpcf_per});
 
 %%% Optimise gp_var %%%
-[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+if subset
+    X_u = datasample(x,m,1,'Replace',false); 
+else
+    [~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+end
 gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',gpcf,'X_u', X_u); 
 gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
 opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
@@ -144,7 +153,7 @@ end
 else
 for m=m_values
 fprintf('m=%d \n',m);
-parfor i=1:10
+parfor i=1:numiter
 rng(i);
 warning('off','all');
 %t=getCurrentTask(); k=t.ID;
@@ -161,8 +170,11 @@ gpcf_per = per_init(x,y);
 gpcf=gpcf_prod('cf',{gpcf_se,gpcf_per});
 
 %%% Optimise gp_var %%%
-%[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
-X_u=datasample(x,m,1,'Replace',false); %random initialisation
+if subset
+    X_u = datasample(x,m,1,'Replace',false); 
+else
+    [~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+end
 gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',gpcf,'X_u', X_u); 
 gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
 opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
@@ -232,7 +244,7 @@ l1=gp_var.cf{1}.cf{1}.cf{1}.lengthScale; sf1=gp_var.cf{1}.cf{1}.cf{1}.magnSigma2
 l2=gp_var.cf{1}.cf{1}.cf{2}.lengthScale; sf2=gp_var.cf{1}.cf{1}.cf{2}.magnSigma2;
 lper=gp_var.cf{1}.cf{2}.lengthScale; sfper=gp_var.cf{1}.cf{2}.magnSigma2; 
 per=gp_var.cf{1}.cf{2}.period;
-parfor i=1:10
+parfor i=1:numiter
 rng(i);
 phi=solarRFF(x,m,l1,sf1,l2,sf2,lper,per,sfper);
 Ar=phi*phi'+signal_var*eye(m);

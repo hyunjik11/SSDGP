@@ -1,8 +1,11 @@
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
-%addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
-
-%%% determine parallel or not %%%
-parallel=0;
+addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
+parallel=1; subset=0;
+if subset
+    fprintf('Using subset of training with rand init \n')
+else
+    fprintf('Using Kmeans with rand init \n')
+end
 if parallel
     num_workers=10;
     POOL=parpool('local',num_workers);
@@ -10,12 +13,12 @@ end
 
 %%% load and set up data %%%
 load concrete.mat
-x=X;
+x=X; Y=y;
 [n,D]=size(x);
 x_mean=mean(x); x_std=std(x);
 y_mean=mean(y); y_std=std(y);
-xw = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
-yw = (y-y_mean)/y_std; %normalise y;
+x = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
+y = (y-y_mean)/y_std; %normalise y;
 
 %%% initialise tables for collecting values%%%
 ind=1;
@@ -49,15 +52,14 @@ warning('off','all');
 
 
 %%% Initialise gp_var %%%
-pl=prior_gaussian('s2',0.5);
-lik = lik_gaussian();
 gpcf_wn=gpcf_prod('cf',{gpcf_constant(),gpcf_cat()});
-gpcf_lin4=gpcf_linear('selectedVariables',4);
-gpcf_se1=gpcf_sexp('selectedVariable',1,'lengthScale_prior',pl);
-gpcf_se2=gpcf_sexp('selectedVariable',2,'lengthScale_prior',pl);
-gpcf_se4=gpcf_sexp('selectedVariable',4,'lengthScale_prior',pl);
-gpcf_se7=gpcf_sexp('selectedVariable',7,'lengthScale_prior',pl);
-gpcf_se8=gpcf_sexp('selectedVariable',8,'lengthScale_prior',pl);
+lik = lik_init(y);
+gpcf_lin4=lin_init(4);
+gpcf_se1=se_init(x(:,1),y,1);
+gpcf_se2=se_init(x(:,2),y,2);
+gpcf_se4=se_init(x(:,4),y,4);
+gpcf_se7=se_init(x(:,7),y,7);
+gpcf_se8=se_init(x(:,8),y,8);
 gpcf1=gpcf_prod('cf',{gpcf_wn,gpcf_lin4});
 gpcf2=gpcf_prod('cf',{gpcf_se1,gpcf_se7});
 gpcf3=gpcf_prod('cf',{gpcf_se1,gpcf_se2,gpcf_se4});
@@ -65,10 +67,14 @@ gpcf4=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se8});
 gpcf5=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se7,gpcf_se8,gpcf_lin4});
 
 %%% Optimise gp_var %%%
-[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
-gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3,gpcf4,gpcf5},'X_u', X_u); 
+if subset
+    X_u = datasample(x,m,1,'Replace',false); 
+else
+    [~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+end
+gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3,gpcf4,gpcf5},'X_u', X_u);
 gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
-opt=optimset('TolFun',1e-2,'TolX',1e-3,'Display','iter','MaxIter',1000);
+opt=optimset('TolFun',1e-2,'TolX',1e-3,'Display','off','MaxIter',1000);
 tic;
 gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
 time=toc;
@@ -161,15 +167,14 @@ warning('off','all');
 
 
 %%% Initialise gp_var %%%
-pl=prior_gaussian('s2',0.5);
-lik = lik_gaussian();
 gpcf_wn=gpcf_prod('cf',{gpcf_constant(),gpcf_cat()});
-gpcf_lin4=gpcf_linear('selectedVariables',4);
-gpcf_se1=gpcf_sexp('selectedVariable',1,'lengthScale_prior',pl);
-gpcf_se2=gpcf_sexp('selectedVariable',2,'lengthScale_prior',pl);
-gpcf_se4=gpcf_sexp('selectedVariable',4,'lengthScale_prior',pl);
-gpcf_se7=gpcf_sexp('selectedVariable',7,'lengthScale_prior',pl);
-gpcf_se8=gpcf_sexp('selectedVariable',8,'lengthScale_prior',pl);
+lik = lik_init(y);
+gpcf_lin4=lin_init(4);
+gpcf_se1=se_init(x(:,1),y,1);
+gpcf_se2=se_init(x(:,2),y,2);
+gpcf_se4=se_init(x(:,4),y,4);
+gpcf_se7=se_init(x(:,7),y,7);
+gpcf_se8=se_init(x(:,8),y,8);
 gpcf1=gpcf_prod('cf',{gpcf_wn,gpcf_lin4});
 gpcf2=gpcf_prod('cf',{gpcf_se1,gpcf_se7});
 gpcf3=gpcf_prod('cf',{gpcf_se1,gpcf_se2,gpcf_se4});
@@ -177,8 +182,11 @@ gpcf4=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se8});
 gpcf5=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se7,gpcf_se8,gpcf_lin4});
 
 %%% Optimise gp_var %%%
-%[~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
-X_u = randn(m,D);
+if subset
+    X_u = datasample(x,m,1,'Replace',false); 
+else
+    [~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
+end
 gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3,gpcf4,gpcf5},'X_u', X_u); 
 gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
 opt=optimset('TolFun',1e-2,'TolX',1e-3,'Display','off','MaxIter',1000);
@@ -188,7 +196,7 @@ gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
 %%% Record ml and gp_var %%%
 lb_table(i,ind)=-nll;
 gp_var_cell{i} = gp_var;
-fprintf('optim for worker %d done \n',i);
+%fprintf('optim for worker %d done \n',i);
 end
 
 %%% Get index of best var LB %%%
@@ -245,13 +253,40 @@ naive_nld_table(ind)=naive_nld;
 
 %%% Compute RFF and use as UB to NLD %%%
 parfor i=1:10
-rng(i);
 phi=concreteRFF(x,gp_var,m);
 Ar=phi*phi'+signal_var*eye(m);
 L_rff=chol(Ar);
 rff_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_rff)));
-fprintf('RFF for worker %d done \n',i);
+%fprintf('RFF for worker %d done \n',i);
 end
+fprintf('ml=%4.3f \n',nld(ind)+nip(ind)-n*log(2*pi)/2);
+fprintf('k1: c=%4.3f, coeffSigma2=%4.3f \n',...
+    gp_var.cf{1}.cf{1}.cf{1}.constSigma2,gp_var.cf{1}.cf{2}.coeffSigma2);
+fprintf('k2: SE1 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{2}.cf{1}.magnSigma2,gp_var.cf{2}.cf{1}.lengthScale(1));
+fprintf('    SE7 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{2}.cf{2}.magnSigma2,gp_var.cf{2}.cf{2}.lengthScale(1));
+fprintf('k3: SE1 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{3}.cf{1}.magnSigma2,gp_var.cf{3}.cf{1}.lengthScale(1));
+fprintf('    SE2 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{3}.cf{2}.magnSigma2,gp_var.cf{3}.cf{2}.lengthScale(1));
+fprintf('    SE4 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{3}.cf{3}.magnSigma2,gp_var.cf{3}.cf{3}.lengthScale(1));
+fprintf('k4: SE2 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{4}.cf{1}.magnSigma2,gp_var.cf{4}.cf{1}.lengthScale(1));
+fprintf('    SE4 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{4}.cf{2}.magnSigma2,gp_var.cf{4}.cf{2}.lengthScale(1));
+fprintf('    SE8 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{4}.cf{3}.magnSigma2,gp_var.cf{4}.cf{3}.lengthScale(1));
+fprintf('k5: SE2 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{5}.cf{1}.magnSigma2,gp_var.cf{5}.cf{1}.lengthScale(1));
+fprintf('    SE4 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{5}.cf{2}.magnSigma2,gp_var.cf{5}.cf{2}.lengthScale(1));
+fprintf('    SE7 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{5}.cf{3}.magnSigma2,gp_var.cf{5}.cf{3}.lengthScale(1));
+fprintf('    SE8 s2=%4.3f, l=%4.3f \n', ...
+    gp_var.cf{5}.cf{4}.magnSigma2,gp_var.cf{5}.cf{4}.lengthScale(1));
+fprintf('lik sigma2=%4.8f \n',gp_var.lik.sigma2);
 ind=ind+1;
 end
 ml = nld + nip - n*log(2*pi)/2;
