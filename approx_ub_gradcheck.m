@@ -1,27 +1,8 @@
-% subplot(1,3,1);
-% ylim([-450,-50]);
-% subplot(1,3,2);
-% ylim([200,650]);
-% subplot(1,3,3);
-% ylim([-200,-165]);
-% 
-% subplot(1,3,1);
-% ylim([400,2200]);
-% subplot(1,3,2);
-% ylim([2400,3100]);
-% subplot(1,3,3);
-% ylim([-400,0]);
-% 
-% subplot(1,3,1);
-% ylim([-1200,-200]);
-% subplot(1,3,2);
-% ylim([650,1150]);
-% subplot(1,3,3);
-% ylim([-520,-400]);
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
-solar = 0;
+addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
+solar = 1;
 concrete = 0;
-mauna = 1;
+mauna = 0;
 if solar
     load solar.mat
     x=X; Y=y;
@@ -98,36 +79,23 @@ if mauna
         [~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
     end
     gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3},'X_u', X_u); 
-end
-gp_fic = gp_set('type', 'FIC', 'lik', lik, 'cf',gpcf,'X_u', X_u);
-num_blocks=ceil(n/m);
-ind=cell(1,num_blocks);
-for i=1:num_blocks
-    ind{i} = (m*(i-1)+1):min(m*i,n);
-end
-gp_pic = gp_set('type', 'PIC', 'lik', lik, 'cf',gpcf,'X_u', X_u, 'tr_index',ind);
-%gp_dtc = gp_set('type', 'DTC', 'lik', lik, 'cf',gpcf,'X_u', X_u);
-gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
-gp_fic = gp_set(gp_fic, 'infer_params', 'covariance+likelihood');
-gp_pic = gp_set(gp_pic, 'infer_params', 'covariance+likelihood');
-%gp_dtc = gp_set(gp_dtc, 'infer_params', 'covariance+likelihood');
-opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','iter','MaxIter',1000);
-warning('off','all');
-%gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
-%w=gp_pak(gp_var);
-%gp_fic=gp_unpak(gp_fic,w);
-%gp_pic=gp_unpak(gp_pic,w);
-%gp_dtc = gp_optim(gp_dtc,x,y,'opt',opt,'optimf',@fminscg);
-%[temp,~]=gp_e([],gp_var,x,y);
-%lb = -temp;
-%gp_e([],gp_var,x,y)
-%gp_e([],gp_fic,x,y)
-%gp_e([],gp_pic,x,y)
-%approx_ub_grad(w,gp_var,x,y)
-[gp_var_new,val]=approx_ub(gp_var,x,y,opt);
-%w=gp_pak(gp_dtc);
-%gp_pic=gp_unpak(gp_pic,w);
-%gp_e([],gp_pic,x,y)
 
-%ub = -temp;
-%fprintf('lb = %4.3f, ub=%4.3f \n',lb,ub);
+end
+%%% Optimise gp_var %%%
+gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
+% opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','iter','MaxIter',1000);
+% gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
+w = gp_pak(gp_var);
+[val,grad]=approx_ub_grad(w,gp_var,x,y);
+for i=1:length(w)
+    fprintf('diff_grad = ')
+    for eps = [1e-2,1e-3,1e-4,1e-5,1e-6]
+        z=w; z(i)=z(i)+eps;
+        [val_new,grad_new] = approx_ub_grad(z,gp_var,x,y);
+        z=w; z(i)=z(i)-eps;
+        [val_old,grad_old] = approx_ub_grad(z,gp_var,x,y);
+        fd = (val_new - val_old)/(2*eps);
+        fprintf('%4.8f ',abs((fd-grad(i))/grad(i)))
+    end
+    fprintf('\n')
+end
