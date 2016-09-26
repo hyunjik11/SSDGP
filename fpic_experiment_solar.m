@@ -23,7 +23,7 @@ if parallel
 else numiter=1;
 end
 if parallel
-    num_workers=4;
+    num_workers=10;
     POOL=parpool('local',num_workers);
 end
 m_values=[10,20,40,80,160,320];

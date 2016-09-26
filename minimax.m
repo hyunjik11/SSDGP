@@ -47,7 +47,7 @@ function [gp_var,old_val] = minimax(gp_var,x,y,opt)
         [~,C]=gp_trcov(gp_var,x);
         %function handle which gives (K_naive+signal_var*eye(n))\x
         myfun = @(ww) (ww-L'*(A\(L*ww)))/signal_var;
-        [alpha,flag,~,~,~,~]=cgs_obj(C,y,[],m,myfun,[],alpha); %gives alpha as col vec
+        [alpha,flag,~,~,~,~]=cgs_obj(C,y,[],[],myfun,[],alpha); %gives alpha as col vec
         switch flag
             case 0
                 fprintf('PCG has converged in m iter\n')

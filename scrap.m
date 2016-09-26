@@ -22,6 +22,13 @@ addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
 solar = 0;
 concrete = 0;
 mauna = 1;
+
+subset = 1;
+m_values=[10,20,40,80,160,320];
+numiter=10;
+lb_table=zeros(numiter,length(m_values));
+approx_ub_table=zeros(numiter,length(m_values));
+ind =1;
 if solar
     load solar.mat
     x=X; Y=y;
@@ -30,8 +37,35 @@ if solar
     x = (x-x_mean)/x_std; %normalise x;
     y = (y-y_mean)/y_std; %normalise y;
     [n,D]=size(x);
-    subset = 1;
-    m=10;
+end
+if concrete
+    load concrete.mat
+    x=X; Y=y;
+    [n,D]=size(x);
+    x_mean=mean(x); x_std=std(x);
+    y_mean=mean(y); y_std=std(y);
+    x = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
+    y = (y-y_mean)/y_std;
+end
+
+if mauna
+    load mauna.txt
+    z = mauna(:,2) ~= -99.99; % get rid of missing data
+    x = mauna(z,1); y = mauna(z,2); % extract year and CO2 concentration
+    X = x; Y = y;
+    x_mean=mean(x); x_std=std(x);
+    y_mean=mean(y); y_std=std(y);
+    x = (x-x_mean)/x_std; %normalise x;
+    y = (y-y_mean)/y_std; %normalise y;
+    [n,D]=size(x);
+end
+
+num_workers=10;
+POOL=parpool('local',num_workers);
+for m=m_values
+    fprintf('m=%d \n',m);
+parfor i=1:numiter
+if solar
     %%% Initialise gp_var %%%
     lik=lik_init(y);
     gpcf_se1=se_init(x,y);
@@ -47,13 +81,6 @@ if solar
     gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',gpcf,'X_u', X_u);
 end
 if concrete
-    load concrete.mat
-    x=X; Y=y;
-    [n,D]=size(x);
-    x_mean=mean(x); x_std=std(x);
-    y_mean=mean(y); y_std=std(y);
-    x = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
-    y = (y-y_mean)/y_std;
     gpcf_wn=gpcf_prod('cf',{gpcf_constant(),gpcf_cat()});
     lik = lik_init(y);
     gpcf_lin4=lin_init(4);
@@ -75,15 +102,6 @@ if concrete
     gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3,gpcf4,gpcf5},'X_u', X_u);
 end
 if mauna
-    load mauna.txt
-    z = mauna(:,2) ~= -99.99; % get rid of missing data
-    x = mauna(z,1); y = mauna(z,2); % extract year and CO2 concentration
-    X = x; Y = y;
-    x_mean=mean(x); x_std=std(x);
-    y_mean=mean(y); y_std=std(y);
-    x = (x-x_mean)/x_std; %normalise x;
-    y = (y-y_mean)/y_std; %normalise y;
-    [n,D]=size(x);
     lik=lik_init(y);
     gpcf_se1=se_init(x,y);
     gpcf_lin=lin_init();
@@ -99,35 +117,47 @@ if mauna
     end
     gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3},'X_u', X_u); 
 end
-gp_fic = gp_set('type', 'FIC', 'lik', lik, 'cf',gpcf,'X_u', X_u);
-num_blocks=ceil(n/m);
-ind=cell(1,num_blocks);
-for i=1:num_blocks
-    ind{i} = (m*(i-1)+1):min(m*i,n);
-end
-gp_pic = gp_set('type', 'PIC', 'lik', lik, 'cf',gpcf,'X_u', X_u, 'tr_index',ind);
+% gp_fic = gp_set('type', 'FIC', 'lik', lik, 'cf',gpcf,'X_u', X_u);
+% num_blocks=ceil(n/m);
+% myind=cell(1,num_blocks);
+% for block=1:num_blocks
+%     myind{block} = (m*(block-1)+1):min(m*block,n);
+% end
+%gp_pic = gp_set('type', 'PIC', 'lik', lik, 'cf',gpcf,'X_u', X_u, 'tr_index',ind);
 %gp_dtc = gp_set('type', 'DTC', 'lik', lik, 'cf',gpcf,'X_u', X_u);
 gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
-gp_fic = gp_set(gp_fic, 'infer_params', 'covariance+likelihood');
-gp_pic = gp_set(gp_pic, 'infer_params', 'covariance+likelihood');
+%gp_fic = gp_set(gp_fic, 'infer_params', 'covariance+likelihood');
+%gp_pic = gp_set(gp_pic, 'infer_params', 'covariance+likelihood');
 %gp_dtc = gp_set(gp_dtc, 'infer_params', 'covariance+likelihood');
-opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','iter','MaxIter',1000);
+opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
 warning('off','all');
-%gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
+gp_var_new=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
 %w=gp_pak(gp_var);
 %gp_fic=gp_unpak(gp_fic,w);
 %gp_pic=gp_unpak(gp_pic,w);
 %gp_dtc = gp_optim(gp_dtc,x,y,'opt',opt,'optimf',@fminscg);
-%[temp,~]=gp_e([],gp_var,x,y);
-%lb = -temp;
+[energy,~]=gp_e([],gp_var_new,x,y);
+lb_table(i,ind) = -energy;
 %gp_e([],gp_var,x,y)
 %gp_e([],gp_fic,x,y)
 %gp_e([],gp_pic,x,y)
 %approx_ub_grad(w,gp_var,x,y)
-[gp_var_new,val]=approx_ub(gp_var,x,y,opt);
+%gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3},'X_u', X_u); 
+if m==320
+    [gp_var,val]=approx_ub(gp_var,x,y,opt);
+    approx_ub_table(i,ind)=-val;
+else
+    [gp_var_new,val_new]=approx_ub(gp_var_new,x,y,opt);
+    [gp_var,val]=approx_ub(gp_var,x,y,opt);
+    approx_ub_table(i,ind)=-min(val,val_new);
+end
+%[gp_var_new,val]=minimax(gp_var,x,y,opt);
 %w=gp_pak(gp_dtc);
 %gp_pic=gp_unpak(gp_pic,w);
 %gp_e([],gp_pic,x,y)
-
+fprintf('optim for worker %d done \n',i);
+end
+ind = ind + 1;
+end
 %ub = -temp;
 %fprintf('lb = %4.3f, ub=%4.3f \n',lb,ub);

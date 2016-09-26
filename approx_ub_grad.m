@@ -1,4 +1,4 @@
-function [val,grad] = approx_ub_grad(w,gp,x,y)
+function [val,grad,edata] = approx_ub_grad(w,gp,x,y)
 % function to return approximate upper bound 
 % 0.5*log(det(K_nyst+sigma_sq*eye(n))+0.5*y'*inv(K_pic + sigma_sq*eye(n))*y
 % - logp(theta) +n/2*log(2*pi)

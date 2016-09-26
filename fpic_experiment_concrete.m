@@ -1,6 +1,6 @@
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
 addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
-parallel=1; subset=1; 
+parallel=0; subset=1; 
 if subset
     fprintf('Using subset of training init ');
 else
@@ -20,10 +20,10 @@ y = (y-y_mean)/y_std; %normalise y;
 ind=1;
 if parallel
     numiter=10;
-else numiter=1;
+else numiter=10;
 end
 if parallel
-    num_workers=4;
+    num_workers=10;
     POOL=parpool('local',num_workers);
 end
 m_values=[10,20,40,80,160,320];
@@ -42,7 +42,7 @@ for ip=1:num_blocks
     pind{ip} = (m*(ip-1)+1):min(m*ip,n);
 end
 
-parfor i=1:numiter
+for i=1:numiter
 rng(i);
 warning('off','all');
 %t=getCurrentTask(); k=t.ID;

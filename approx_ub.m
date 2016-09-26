@@ -1,6 +1,7 @@
 function [gp_var_new,val] = approx_ub(gp_var,x,y,opt)
 % optimizer to solve max_theta {0.5*log(det(K_nyst+sigma_sq*eye(n))+...
 % 0.5*y'*inv(K_pic + sigma_sq*eye(n))*y - logp(theta) +n/2*log(2*pi)}
+% val = -ve log-lik approx (the objective that is minimised)
     warning('off','all');
     w = gp_pak(gp_var);
     myfn = @(ww) approx_ub_grad(ww,gp_var,x,y);
