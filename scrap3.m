@@ -21,3 +21,11 @@ ylabel('negative energy')
 xlabel('m')
 hold off
 saveas(gcf,'plots/approx_ub_concrete.fig')
+
+for idx=1:length(kernel_dict)
+    keys = kernel_dict.keys; key = keys{idx};
+    val = kernel_dict(key);
+    lb_vector = val{1};
+    gp_ne = val{7};
+    fprintf([key ' has gp_ne = %4.3f, lb = %4.3f \n'],gp_ne,lb_vector(6));
+end

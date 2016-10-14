@@ -4,10 +4,10 @@ concrete = 0;
 solar = 0;
 mauna = 1;
 
-numiter=10;
+numiter=1;
 warning('off','all');
 num_workers=10;
-POOL=parpool('local',num_workers);
+%POOL=parpool('local',num_workers);
 
 table=zeros(1,numiter);
 if concrete
@@ -123,7 +123,7 @@ if solar
     gpcf_se=gpcf_sum('cf',{gpcf_se1,gpcf_se2});
     gpcf_per = per_init(x,y);
     gpcf=gpcf_prod('cf',{gpcf_se,gpcf_per});
-    opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
+    opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','iter','MaxIter',1000);
     gp=gp_set('lik',lik,'cf',gpcf);
     warning('off','all');
     gp=gp_optim(gp,x,y,'opt',opt);
@@ -201,7 +201,7 @@ if mauna
 %     gpcf_per = gpcf_periodic('lengthScale',lper,'period',per,'magnSigma2',sfper,'lengthScale_prior',pl);
 %     gpcf2=gpcf_prod('cf',{gpcf_se2,gpcf_per});
 %     gpcf3 = gpcf_sexp('lengthScale', l3, 'magnSigma2', sf3,'lengthScale_prior',pl);
-    parfor i=1:numiter
+    for i=1:numiter
     warning('off','all');
     lik=lik_init(y);
     gpcf_se1=se_init(x,y);
@@ -211,12 +211,15 @@ if mauna
     gpcf1=gpcf_prod('cf',{gpcf_se1,gpcf_lin});
     gpcf2=gpcf_prod('cf',{gpcf_se2,gpcf_per});
     gpcf3=se_init(x,y);
-    opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
-    gp=gp_set('lik',lik,'cf',{gpcf1,gpcf2,gpcf3});
-    gp=gp_optim(gp,x,y,'opt',opt);
+    opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','iter','MaxIter',1000);
+    gpcf = gpcf_sum('cf',{gpcf1,gpcf2,gpcf3});
+    X_u = datasample(x,m,1,'Replace',false); 
+    gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',gpcf,'X_u', X_u);
+    %gp=gp_set('lik',lik,'cf',gpcf);
+    gp_var=gp_optim(gp_var,x,y,'opt',opt);
     %pred=gp_pred(gp,x,y,x);
-    [energy,nll]=gp_e([],gp,x,y);
-    table(i)=-energy;
+    %[energy,nll]=gp_e([],gp,x,y);
+    %table(i)=-energy;
 %     pred=pred*y_std+y_mean;
 %     figure();
 %     scatter(X,Y,'x');
@@ -278,3 +281,7 @@ if mauna
     end
 end
 delete(POOL)
+
+keySet = {'SE','LIN','PER'};
+valueSet = {se_init(x,y),lin_init(),per_init(x,y)};
+base_kernels=containers.Map(keySet,valueSet);

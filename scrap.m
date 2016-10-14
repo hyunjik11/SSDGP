@@ -24,8 +24,9 @@ concrete = 0;
 mauna = 1;
 
 subset = 1;
-m_values=[10,20,40,80,160,320];
-numiter=10;
+%m_values=[10,20,40,80,160,320];
+m_values=[320];
+numiter=100;
 lb_table=zeros(numiter,length(m_values));
 approx_ub_table=zeros(numiter,length(m_values));
 ind =1;
@@ -60,11 +61,12 @@ if mauna
     [n,D]=size(x);
 end
 
-num_workers=10;
+num_workers=20;
 POOL=parpool('local',num_workers);
 for m=m_values
     fprintf('m=%d \n',m);
 parfor i=1:numiter
+    %rng(i)
 if solar
     %%% Initialise gp_var %%%
     lik=lik_init(y);
@@ -131,20 +133,31 @@ gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
 %gp_dtc = gp_set(gp_dtc, 'infer_params', 'covariance+likelihood');
 opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
 warning('off','all');
-gp_var_new=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
+% gp_var_new=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
 %w=gp_pak(gp_var);
 %gp_fic=gp_unpak(gp_fic,w);
 %gp_pic=gp_unpak(gp_pic,w);
 %gp_dtc = gp_optim(gp_dtc,x,y,'opt',opt,'optimf',@fminscg);
-[energy,~]=gp_e([],gp_var_new,x,y);
-lb_table(i,ind) = -energy;
+% [energy,~]=gp_e([],gp_var_new,x,y);
+% lb_table(i,ind) = -energy;
 %gp_e([],gp_var,x,y)
 %gp_e([],gp_fic,x,y)
 %gp_e([],gp_pic,x,y)
 %approx_ub_grad(w,gp_var,x,y)
 %gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3},'X_u', X_u); 
+
 if m==320
     [gp_var,val]=approx_ub(gp_var,x,y,opt);
+    signal_var=gp_var.lik.sigma2;
+    K_mn=gp_cov(gp_var,X_u,x); K_mm=gp_trcov(gp_var,X_u);
+    L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
+    L=L_mm'\K_mn; %L'*L=K_hat=K_mn'*(K_mm\K_mn)
+    A=L*L'+signal_var*eye(m);
+    L_naive=chol(A);
+    K_naive=L'*L;
+    n_cond=cond(K_naive + signal_var*eye(n));
+    fprintf('-val =%4.3f, sigma2=%4.8f, cond=%4.3f \n',...
+        -val, gp_var.lik.sigma2,n_cond);
     approx_ub_table(i,ind)=-val;
 else
     [gp_var_new,val_new]=approx_ub(gp_var_new,x,y,opt);
@@ -155,7 +168,7 @@ end
 %w=gp_pak(gp_dtc);
 %gp_pic=gp_unpak(gp_pic,w);
 %gp_e([],gp_pic,x,y)
-fprintf('optim for worker %d done \n',i);
+%fprintf('optim for worker %d done \n',i);
 end
 ind = ind + 1;
 end
