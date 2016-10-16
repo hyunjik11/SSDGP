@@ -1,5 +1,8 @@
 function gpcf=per_init(x,y,dim)
-    % optional: dim is the dimension on which the se kernel is defined    
+    % optional: dim is the dimension on which the se kernel is defined
+    if size(x,2) > 1
+        x = x(:,dim);
+    end
     std_x = std(x);
     std_y = std(y);
     n=length(x);
@@ -16,4 +19,5 @@ function gpcf=per_init(x,y,dim)
         'period',exp(minp+TruncatedGaussian(-1/2,[0,Inf])),'magnSigma2',...
         0.1*std_y*exp(randn()/2),'lengthScale_prior',prior_t(),...
         'period_prior',plper,'selectedVariables',dim);
+    end
 end

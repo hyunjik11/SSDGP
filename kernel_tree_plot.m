@@ -3,7 +3,7 @@ keys = kernel_dict.keys;
 for key_ind = 1:length(keys)
     key=keys{key_ind};
     kernel_cell = kernel_dict(key);
-    lb = kernel_cell{1}; ub = kernel_cell{4}; ne = kernel_cell{7};
+    lb = kernel_cell{1}; ub = kernel_cell{4}; ne = kernel_cell{5};
     figure();
     hold on
     x_idx = 1:length(m_values);

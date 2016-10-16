@@ -37,18 +37,14 @@ end
 num_workers=10;
 %POOL=parpool('local',num_workers);
 
-keySet = {'SE','LIN','PER'};
-valueSet = {se_init(x,y),lin_init(),per_init(x,y)};
-base_kernels=containers.Map(keySet,valueSet);
-
-final_depth=2;
+final_depth=3;
 num_iter=10;
 seed=123;
 fullgp=1;
 m_values = [10,20,40,80,160,320];
 
-[kernel_dict, kernel_dict_debug] = kernel_tree(x,y,base_kernels,final_depth,num_iter,m_values,seed,fullgp);
+[kernel_dict, kernel_dict_debug] = kernel_tree(x,y,final_depth,num_iter,m_values,seed,fullgp,'PIC');
 
-kernel_tree_plot(kernel_dict,m_values);
+%kernel_tree_plot(kernel_dict,m_values);
 
-delete(POOL)
+%delete(POOL)

@@ -1,5 +1,8 @@
 function gpcf=se_init(x,y,dim)
     % optional: dim is the dimension on which the se kernel is defined
+    if size(x,2) > 1
+        x = x(:,dim);
+    end
     std_x = std(x);
     std_y = std(y);
     pl=prior_gaussian('s2',0.25);
