@@ -103,7 +103,7 @@ for depth = 1:final_depth
             fprintf([key ' done \n']);
         end
         
-    else %%% for depth > 1, branch factor = 6
+    else %%% for depth > 1, branch factor = 6*ndims
         for key_ind = 1:length(kernel_dict_depth.keys)
             keys = kernel_dict_depth.keys; key = keys{key_ind};
             depth_cell = kernel_dict_depth(key);
@@ -320,13 +320,13 @@ function ub = ubfunction(x,y,gp_var,precond)
     ub = naive_nld + nip_ub - 0.5*n*log(2*pi);
 end
 
-function [ml, gpcf, lik] = gpfunction(x,y,gpcf,lik)
+function [ne, gpcf, lik] = gpfunction(x,y,gpcf,lik)
     gp=gp_set('lik',lik,'cf',gpcf);
     opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
     warning('off','all');
     gp = gp_optim(gp,x,y,'opt',opt,'optimf',@fminscg);
-    [~, ml, ~] = gp_e([],gp,x,y);
-    ml = -ml;
+    [ne, ~ , ~] = gp_e([],gp,x,y);
+    ne = -ne;
     gpcf = gp.cf{1};
     lik = gp.lik;
 end
