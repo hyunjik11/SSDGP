@@ -1,6 +1,6 @@
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
-solar = 0;
-concrete = 1;
+solar = 1;
+concrete = 0;
 mauna = 0;
 
 if solar
@@ -34,11 +34,11 @@ if mauna
     [n,D]=size(x);
 end
 
-num_workers=10;
+num_workers=4;
 POOL=parpool('local',num_workers);
 
-final_depth=2;
-num_iter=10;
+final_depth=1;
+num_iter=4;
 seed=123;
 fullgp=1;
 m_values = [10,20,40,80,160,320];

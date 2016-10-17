@@ -270,7 +270,7 @@ function [lb, gpcf, lik] = lbfunction(x,y,xu,gpcf,lik)
     opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
     warning('off','all');
     gp_var = gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
-    [~,lb,~] = gp_e([],gp_var,x,y);
+    lb = gp_e([],gp_var,x,y);
     lb = -lb;
     gpcf = gp_var.cf{1};
     lik = gp_var.lik;
@@ -317,7 +317,15 @@ function ub = ubfunction(x,y,gp_var,precond)
         otherwise
             error('precond is invalid')
     end
-    ub = naive_nld + nip_ub - 0.5*n*log(2*pi);
+    logprior = 0;
+    ncf = length(gp_var.cf); % number of hyp
+    for i=1:ncf
+        gpcf = gp_var.cf{i};
+        logprior = logprior + gpcf.fh.lp(gpcf);
+    end
+    lik = gp_var.lik;
+    logprior = logprior + lik.fh.lp(lik);
+    ub = naive_nld + nip_ub - 0.5*n*log(2*pi) + logprior;
 end
 
 function [ne, gpcf, lik] = gpfunction(x,y,gpcf,lik)
