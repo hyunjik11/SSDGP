@@ -5,8 +5,10 @@ for key_ind = 1:length(keys)
     kernel_cell = kernel_dict(key);
     lb = kernel_cell{1}; ub = kernel_cell{5}; ne = kernel_cell{6};
     figure();
+    set(gca,'fontsize',18)
     hold on
     x_idx = 1:length(m_values);
+    xlim([0.5,6.5])
     ylim(y_lim);
     plot(x_idx,ub,'LineWidth',3);
     plot(x_idx,ne*ones(size(m_values)),'LineWidth',2);
@@ -14,9 +16,9 @@ for key_ind = 1:length(keys)
     set(gca,'XTick',[1 2 3 4 5 6]);
     set(gca,'XTickLabel',[10 20 40 80 160 320]);
     xlabel('m')
-    ylabel('negative energy')
+    %ylabel('negative energy')
     title(key)
-    legend('UB','fullGP','LB')
+    %legend('UB','fullGP','LB')
     hold off
     file_name=strcat(directory,key,'.png');
     file_name = regexprep(file_name,'+','_plus_');
