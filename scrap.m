@@ -89,16 +89,16 @@ if concrete
     lik = lik_init(y);
     gpcf_lin=lin_init(dim);
     fprintf('lin_sigma2 = %4.3f, signal_var = %4.3f \n',gpcf_lin.coeffSigma2,lik.sigma2)
-%     gpcf_se1=se_init(x(:,1),y,1);
-%     gpcf_se2=se_init(x(:,2),y,2);
-%     gpcf_se4=se_init(x(:,4),y,4);
-%     gpcf_se7=se_init(x(:,7),y,7);
-%     gpcf_se8=se_init(x(:,8),y,8);
-%     gpcf1=gpcf_prod('cf',{gpcf_wn,gpcf_lin4});
-%     gpcf2=gpcf_prod('cf',{gpcf_se1,gpcf_se7});
-%     gpcf3=gpcf_prod('cf',{gpcf_se1,gpcf_se2,gpcf_se4});
-%     gpcf4=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se8});
-%     gpcf5=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se7,gpcf_se8,gpcf_lin4});
+    gpcf_se1=se_init(x(:,1),y,1);
+    gpcf_se2=se_init(x(:,2),y,2);
+    gpcf_se4=se_init(x(:,4),y,4);
+    gpcf_se7=se_init(x(:,7),y,7);
+    gpcf_se8=se_init(x(:,8),y,8);
+    gpcf1=gpcf_prod('cf',{gpcf_wn,gpcf_lin4});
+    gpcf2=gpcf_prod('cf',{gpcf_se1,gpcf_se7});
+    gpcf3=gpcf_prod('cf',{gpcf_se1,gpcf_se2,gpcf_se4});
+    gpcf4=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se8});
+    gpcf5=gpcf_prod('cf',{gpcf_se2,gpcf_se4,gpcf_se7,gpcf_se8,gpcf_lin4});
     if subset
         X_u = datasample(x,m,1,'Replace',false); 
     else

@@ -34,17 +34,17 @@ if mauna
     [n,D]=size(x);
 end
 
-num_workers=4;
-POOL=parpool('local',num_workers);
+num_workers=10;
+%POOL=parpool('local',num_workers);
 
-final_depth=1;
-num_iter=4;
+final_depth=2;
+num_iter=10;
 seed=123;
 fullgp=1;
 m_values = [10,20,40,80,160,320];
 
 [kernel_dict, kernel_dict_debug] = kernel_tree(x,y,final_depth,num_iter,m_values,seed,fullgp,'PIC');
 
-%kernel_tree_plot(kernel_dict,m_values);
+kernel_tree_plot(kernel_dict,m_values,[-1500,-1200],'plots/concrete_tree/');
 
 delete(POOL)

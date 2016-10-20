@@ -15,10 +15,10 @@ base_kernels = construct_base_kernels(x,y);
 kernel_dict = containers.Map('KeyType','char','ValueType','any');
 
 %%% intialise dictionary of kernels at current depth with key = kernel type,
-%%% value = cell of lb(+gpcf,lik),ub,fullgp(+gpcf,lik) (size=7, order = lb, ub, fullGP)
+%%% value = cell of lb(+gpcf,lik,indices of indpts),ub,fullgp(+gpcf,lik) (size=8, order = lb, ub, fullGP)
 kernel_dict_depth = containers.Map('KeyType','char','ValueType','any');
 
-% debug contains lb(+gpcf,lik), ub(+gpcf,lik), fullgp(+gpcf,lik) for all iterations
+% debug contains lb(+gpcf,lik,indices_indpts), ub(+gpcf,lik), fullgp(+gpcf,lik) for all iterations
 kernel_dict_debug = containers.Map('KeyType','char','ValueType','any');
 
 rng(seed);
@@ -43,18 +43,24 @@ for depth = 1:final_depth
                 gp_gpcf_cell = cell(num_iter,1); % stores fullgp gpcf for all iter
                 gp_lik_cell = cell(num_iter,1); % stores fullgp lik for all iter
             end
-            idx_cell = cell(num_iter,1); % stores indices for ind pts for all iter
+            idx_cell = cell(num_iter,nm); % stores indices for ind pts for all iter
             idx_u = 1:n; %idx_u used to store indices of subset for best LB for previous m
+            [gpcf_best,lik_best] = reinitialise_kernel(val,x,y); %temporary initialisation
             for i = 1:nm
-                m = m_values(i);                
+                m = m_values(i);
                 parfor iter = 1:num_iter % change to parfor for parallel
-                    weights = 1e-10*ones(1,n); %weights for sampling
-                    weights(idx_u)=1; %make sure samples idx_u are included
-                    [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false,'Weights',weights);
-                    
+                    %rng(iter);                    
                     % optim for lb
-                    [gpcf, lik] = reinitialise_kernel(val,x,y);
-                    [lb_table(iter,i),lb_gpcf_cell{iter,i},lb_lik_cell{iter,i}] = lbfunction(x,y,xu,gpcf,lik);
+                    if i==1 || iter <= num_iter/2 % use rand init of hyp for all iter of first m & half iters for other m's
+                        [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false);
+                        [gpcf, lik] = reinitialise_kernel(val,x,y);
+                        [lb_table(iter,i),lb_gpcf_cell{iter,i},lb_lik_cell{iter,i}] = lbfunction(x,y,xu,gpcf,lik);
+                    else % keep optimal ind pts from previous m, and also keep the hyp
+                        weights = 1e-10*ones(1,n); %weights for sampling
+                        weights(idx_u)=1; %make sure samples idx_u are included
+                        [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false,'Weights',weights);
+                        [lb_table(iter,i),lb_gpcf_cell{iter,i},lb_lik_cell{iter,i}] = lbfunction(x,y,xu,gpcf_best,lik_best);
+                    end
                     
                     % optim for fullgp
                     if fullgp && (i==1)
@@ -65,18 +71,19 @@ for depth = 1:final_depth
                 idx_u = idx_cell{ind,i}; %indices of subset for best LB
                 % find ub for hyp from best LB
                 xu = x(idx_u,:);
-                gpcf = lb_gpcf_cell{ind,i};
-                lik = lb_lik_cell{ind,i};
-                gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',gpcf,'X_u', xu);
+                gpcf_best = lb_gpcf_cell{ind,i};
+                lik_best = lb_lik_cell{ind,i};
+                gp_var = gp_set('type', 'VAR', 'lik', lik_best, 'cf',gpcf_best,'X_u', xu);
                 gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
                 ub_table(i) = ubfunction(x,y,gp_var,precond);
             end
             % gather best results
             [lb,ind] = max(lb_table,[],1);
-            lb_gpcf = cell(1,nm); lb_lik = cell(1,nm);
+            lb_gpcf = cell(1,nm); lb_lik = cell(1,nm); lb_idx=cell(1,nm);
             for i=1:nm
                 lb_gpcf{i} = lb_gpcf_cell{ind(i),i};
                 lb_lik{i} = lb_lik_cell{ind(i),i};
+                lb_idx{i} = idx_cell{ind(i),i};
             end
             
             if fullgp
@@ -88,15 +95,15 @@ for depth = 1:final_depth
             % store all data in debug_cell, value for kernel_dict_debug
             debug_cell = {};
             debug_cell{1} = lb_table; debug_cell{2} = lb_gpcf_cell; debug_cell{3} = lb_lik_cell;
-            debug_cell{4} = ub_table; 
+            debug_cell{4} = idx_cell; debug_cell{5} = ub_table; 
          
             % store best results in gpcf_dict_depth
             depth_cell = {};
             depth_cell{1} = lb; depth_cell{2} = lb_gpcf; depth_cell{3} = lb_lik;
-            depth_cell{4} = ub_table; 
+            depth_cell{4} = lb_idx; depth_cell{5} = ub_table; 
             if fullgp
-                debug_cell{5} = gp_table; debug_cell{6} = gp_gpcf_cell; debug_cell{7} = gp_lik_cell;
-                depth_cell{5} = ml; depth_cell{6} = gp_gpcf; depth_cell{7} = gp_lik;
+                debug_cell{6} = gp_table; debug_cell{7} = gp_gpcf_cell; debug_cell{8} = gp_lik_cell;
+                depth_cell{6} = ml; depth_cell{7} = gp_gpcf; depth_cell{8} = gp_lik;
             end
             kernel_dict_debug(key) = debug_cell;
             kernel_dict_depth_new(key) = depth_cell;
@@ -130,43 +137,53 @@ for depth = 1:final_depth
                         gp_gpcf_cell = cell(num_iter,1); % stores fullgp gpcf for all iter
                         gp_lik_cell = cell(num_iter,1); % stores fullgp lik for all iter
                     end
-                    idx_cell = cell(num_iter,1); % stores indices for ind pts for all iter
+                    idx_cell = cell(num_iter,nm); % stores indices for ind pts for all iter
                     idx_u = 1:n; %idx_u used to store indices of subset for best LB for previous m
+                    [gpcf_best,lik_best] = reinitialise_kernel(val,x,y); %temporary initialisation
                     for i = 1:nm
                         m = m_values(i);
                         parfor iter = 1:num_iter
-                            weights = 1e-10*ones(1,n); %weights for sampling
-                            weights(idx_u)=1; %make sure samples idx_u are included
-                            [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false,'Weights',weights);
-                            [val_base_new,~] = reinitialise_kernel(val_base,x,y);
-                            if comp==0 % kernel in previous depth + base kernel
-                                gpcf = gpcf_sum('cf',{val,val_base_new});
-                            else % kernel in previous depth * base kernel
-                                gpcf = gpcf_prod('cf',{val,val_base_new});
-                            end
+                            %rng(iter);
                             % optim for lb
-                            [lb_table(iter,i),lb_gpcf_cell{iter,i},lb_lik_cell{iter,i}] = lbfunction(x,y,xu,gpcf,lik);
+                            if i==1 || iter<=num_iter/2  % get optimal hyp from previous depth kernels, with new ind pts and hyps for current depth kernel
+                                [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false);
+                                [val_base_new,~] = reinitialise_kernel(val_base,x,y);
+                                if comp==0 % kernel in previous depth + base kernel
+                                    gpcf_new = gpcf_sum('cf',{val,val_base_new});
+                                else % kernel in previous depth * base kernel
+                                    gpcf_new = gpcf_prod('cf',{val,val_base_new});
+                                end
+                                [lb_table(iter,i),lb_gpcf_cell{iter,i},lb_lik_cell{iter,i}] = lbfunction(x,y,xu,gpcf_new,lik);
+
+                            else % for half the iter, keep optimal ind pts and hyp from previous m
+                                weights = 1e-10*ones(1,n); %weights for sampling
+                                weights(idx_u)=1; %make sure samples idx_u are included
+                                [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false,'Weights',weights);
+                                [lb_table(iter,i),lb_gpcf_cell{iter,i},lb_lik_cell{iter,i}] = lbfunction(x,y,xu,gpcf_best,lik_best);
+                            end
+                            
                             % optim for fullgp
                             if fullgp && (i==1)
-                                [gp_table(iter),gp_gpcf_cell{iter},gp_lik_cell{iter}] = gpfunction(x,y,gpcf,lik);
+                                [gp_table(iter),gp_gpcf_cell{iter},gp_lik_cell{iter}] = gpfunction(x,y,gpcf_new,lik);
                             end
                         end
                         [~,ind] = max(lb_table(:,i));
                         idx_u = idx_cell{ind,i}; %indices of subset for best LB
                         % find ub for hyp from best LB
                         xu = x(idx_u,:);
-                        gpcf = lb_gpcf_cell{ind,i};
-                        lik = lb_lik_cell{ind,i};
-                        gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',gpcf,'X_u', xu);
+                        gpcf_best = lb_gpcf_cell{ind,i};
+                        lik_best = lb_lik_cell{ind,i};
+                        gp_var = gp_set('type', 'VAR', 'lik', lik_best, 'cf',gpcf_best,'X_u', xu);
                         gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
                         ub_table(i) = ubfunction(x,y,gp_var,precond);
                     end
                     % gather best results
                     [lb,ind] = max(lb_table,[],1);
-                    lb_gpcf = cell(1,nm); lb_lik = cell(1,nm);
+                    lb_gpcf = cell(1,nm); lb_lik = cell(1,nm); lb_idx=cell(1,nm);
                     for i=1:nm
                         lb_gpcf{i} = lb_gpcf_cell{ind(i),i};
                         lb_lik{i} = lb_lik_cell{ind(i),i};
+                        lb_idx{i} = idx_cell{ind(i),i};
                     end
                     
                     if fullgp
@@ -178,15 +195,15 @@ for depth = 1:final_depth
                     % store all data in debug_cell, value for kernel_dict_debug
                     debug_cell = {};
                     debug_cell{1} = lb_table; debug_cell{2} = lb_gpcf_cell; debug_cell{3} = lb_lik_cell;
-                    debug_cell{4} = ub_table; 
+                    debug_cell{4} = idx_cell; debug_cell{5} = ub_table; 
                     
                     % store best results in gpcf_dict_depth
                     depth_cell = {};
                     depth_cell{1} = lb; depth_cell{2} = lb_gpcf; depth_cell{3} = lb_lik;
-                    depth_cell{4} = ub_table; 
+                    depth_cell{4} = lb_idx; depth_cell{5} = ub_table; 
                     if fullgp
-                        debug_cell{5} = gp_table; debug_cell{6} = gp_gpcf_cell; debug_cell{7} = gp_lik_cell;
-                        depth_cell{5} = ml; depth_cell{6} = gp_gpcf; depth_cell{7} = gp_lik;
+                        debug_cell{6} = gp_table; debug_cell{7} = gp_gpcf_cell; debug_cell{8} = gp_lik_cell;
+                        depth_cell{6} = ml; depth_cell{7} = gp_gpcf; depth_cell{8} = gp_lik;
                     end
                     kernel_dict_debug(key_new) = debug_cell;
                     kernel_dict_depth_new(key_new) = depth_cell;

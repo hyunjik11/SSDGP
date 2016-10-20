@@ -1,6 +1,6 @@
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
 addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
-parallel=1; subset=0; half=0;
+parallel=1; subset=1; half=1; learn_ind_pts = 1;
 if subset
     fprintf('Using subset of training init ');
 else
@@ -43,6 +43,8 @@ pcg_objf_table=zeros(1,lm);
 pcg_objp_table=zeros(1,lm);
 nld = zeros(1,lm);
 nip = zeros(1,lm);
+ne = zeros(1,lm);
+ne_full = zeros(numiter,1);
 gp_var_cell=cell(1,numiter);
 idx_u_cell=cell(1,numiter);
 
@@ -78,7 +80,11 @@ if ind == 1 || mod(half*i+half+1,2)==0 %latter = 1 if half=0, and mod(i,2) if ha
         [~,X_u]=kmeans(x,m); %inducing pts initialised by Kmeans++
     end
     gp_var_loc = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3,gpcf4,gpcf5},'X_u', X_u); 
-    gp_var_loc = gp_set(gp_var_loc, 'infer_params', 'covariance+likelihood');
+    if learn_ind_pts
+        gp_var_loc = gp_set(gp_var_loc, 'infer_params', 'covariance+likelihood+inducing');
+    else
+        gp_var_loc = gp_set(gp_var_loc, 'infer_params', 'covariance+likelihood');
+    end
 else
     if subset %select m_new-m_old more pts from training, with no overlap
         weights = 1e-10*ones(1,size(x,1)); %weights for sampling
@@ -93,13 +99,22 @@ else
     gp_var_loc.X_u = X_u; %keep hyperparams & ind pts the same, but add more ind pts.
 end
 
-%%% Optimise gp_var %%%
 opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','off','MaxIter',1000);
+
+%%% Optimise gp %%%
+if ind == 1
+    gp = gp_set('lik',lik,'cf',{gpcf1,gpcf2,gpcf3,gpcf4,gpcf5});
+    gp = gp_optim(gp,x,y,'opt',opt,'optimf',@fminscg);
+    energy = gp_e([],gp,x,y);
+    ne_full(i) = -energy;
+end
+
+%%% Optimise gp_var %%%
 gp_var_loc=gp_optim(gp_var_loc,x,y,'opt',opt,'optimf',@fminscg);
-[~,nll]=gp_e([],gp_var_loc,x,y);
+energy=gp_e([],gp_var_loc,x,y);
 
 %%% Record ml and gp_var %%%
-lb_table(i,ind)=-nll;
+lb_table(i,ind)=-energy;
 gp_var_cell{i} = gp_var_loc;
 %fprintf('optim for worker %d done \n',i);
 end
@@ -110,6 +125,12 @@ gp_var = gp_var_cell{maxind};
 if subset
     idx_u = idx_u_cell{maxind};
 end
+
+%%% Compute ne of full GP for these hyp %%%
+gp = gp_set('lik',gp_var.lik,'cf',gp_var.cf);
+energy = gp_e([],gp,x,y);
+ne(ind) = -energy;
+
 %%% Extract inducing points and signal_var from VAR %%%
 xu=gp_var.X_u;
 signal_var=gp_var.lik.sigma2;
@@ -159,43 +180,44 @@ pcg_objf_table(ind)=pcg_objf(end);
 pcg_objp_table(ind)=pcg_objp(end);
 naive_nld_table(ind)=naive_nld;
 
-parfor i=1:numiter
+%%% Compute RFF and use as UB to NLD %%%
+parfor j=1:numiter
 phi=concreteRFF(x,gp_var,m);
 Ar=phi*phi'+signal_var*eye(m);
 L_rff=chol(Ar);
 rff_nld=(m-n)*log(signal_var)/2-sum(log(diag(L_rff)));
+rff_nld_table(j,ind)=rff_nld;
 %fprintf('RFF for worker %d done \n',i);
 end
-fprintf('ml=%4.3f \n',nld(ind)+nip(ind)-n*log(2*pi)/2);
-fprintf('k1: c=%4.3f, coeffSigma2=%4.3f \n',...
-    gp_var.cf{1}.cf{1}.cf{1}.constSigma2,gp_var.cf{1}.cf{2}.coeffSigma2);
-fprintf('k2: SE1 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{2}.cf{1}.magnSigma2,gp_var.cf{2}.cf{1}.lengthScale(1));
-fprintf('    SE7 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{2}.cf{2}.magnSigma2,gp_var.cf{2}.cf{2}.lengthScale(1));
-fprintf('k3: SE1 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{3}.cf{1}.magnSigma2,gp_var.cf{3}.cf{1}.lengthScale(1));
-fprintf('    SE2 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{3}.cf{2}.magnSigma2,gp_var.cf{3}.cf{2}.lengthScale(1));
-fprintf('    SE4 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{3}.cf{3}.magnSigma2,gp_var.cf{3}.cf{3}.lengthScale(1));
-fprintf('k4: SE2 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{4}.cf{1}.magnSigma2,gp_var.cf{4}.cf{1}.lengthScale(1));
-fprintf('    SE4 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{4}.cf{2}.magnSigma2,gp_var.cf{4}.cf{2}.lengthScale(1));
-fprintf('    SE8 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{4}.cf{3}.magnSigma2,gp_var.cf{4}.cf{3}.lengthScale(1));
-fprintf('k5: SE2 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{5}.cf{1}.magnSigma2,gp_var.cf{5}.cf{1}.lengthScale(1));
-fprintf('    SE4 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{5}.cf{2}.magnSigma2,gp_var.cf{5}.cf{2}.lengthScale(1));
-fprintf('    SE7 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{5}.cf{3}.magnSigma2,gp_var.cf{5}.cf{3}.lengthScale(1));
-fprintf('    SE8 s2=%4.3f, l=%4.3f \n', ...
-    gp_var.cf{5}.cf{4}.magnSigma2,gp_var.cf{5}.cf{4}.lengthScale(1));
-fprintf('lik sigma2=%4.8f \n',gp_var.lik.sigma2);
+% fprintf('ml=%4.3f \n',nld(ind)+nip(ind)-n*log(2*pi)/2);
+% fprintf('k1: c=%4.3f, coeffSigma2=%4.3f \n',...
+%     gp_var.cf{1}.cf{1}.cf{1}.constSigma2,gp_var.cf{1}.cf{2}.coeffSigma2);
+% fprintf('k2: SE1 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{2}.cf{1}.magnSigma2,gp_var.cf{2}.cf{1}.lengthScale(1));
+% fprintf('    SE7 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{2}.cf{2}.magnSigma2,gp_var.cf{2}.cf{2}.lengthScale(1));
+% fprintf('k3: SE1 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{3}.cf{1}.magnSigma2,gp_var.cf{3}.cf{1}.lengthScale(1));
+% fprintf('    SE2 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{3}.cf{2}.magnSigma2,gp_var.cf{3}.cf{2}.lengthScale(1));
+% fprintf('    SE4 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{3}.cf{3}.magnSigma2,gp_var.cf{3}.cf{3}.lengthScale(1));
+% fprintf('k4: SE2 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{4}.cf{1}.magnSigma2,gp_var.cf{4}.cf{1}.lengthScale(1));
+% fprintf('    SE4 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{4}.cf{2}.magnSigma2,gp_var.cf{4}.cf{2}.lengthScale(1));
+% fprintf('    SE8 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{4}.cf{3}.magnSigma2,gp_var.cf{4}.cf{3}.lengthScale(1));
+% fprintf('k5: SE2 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{5}.cf{1}.magnSigma2,gp_var.cf{5}.cf{1}.lengthScale(1));
+% fprintf('    SE4 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{5}.cf{2}.magnSigma2,gp_var.cf{5}.cf{2}.lengthScale(1));
+% fprintf('    SE7 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{5}.cf{3}.magnSigma2,gp_var.cf{5}.cf{3}.lengthScale(1));
+% fprintf('    SE8 s2=%4.3f, l=%4.3f \n', ...
+%     gp_var.cf{5}.cf{4}.magnSigma2,gp_var.cf{5}.cf{4}.lengthScale(1));
+% fprintf('lik sigma2=%4.8f \n',gp_var.lik.sigma2);
 ind=ind+1;
 m_old=m;
 end
-ml = nld + nip - n*log(2*pi)/2;
 delete(POOL)
