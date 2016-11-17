@@ -1,7 +1,7 @@
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
 solar = 0;
-concrete = 1;
-mauna = 0;
+concrete = 0;
+mauna = 1;
 
 if solar
     load solar.mat
@@ -37,13 +37,14 @@ end
 num_workers=10;
 POOL=parpool('local',num_workers);
 
-final_depth=1;
+final_depth=4;
 num_iter=10;
 seed=123;
-fullgp=1;
 m_values = [10,20,40,80,160,320];
+S = 1;
+precond = 'PIC';
 
-[kernel_dict, kernel_dict_debug] = kernel_tree(x,y,final_depth,num_iter,m_values,seed,fullgp,'PIC');
+[kernel_buffer, kernel_top, kernel_top_history] = skd(x,y,final_depth,num_iter,m_values,seed,S,precond);
 %save /data/greypartridge/not-backed-up/oxwasp/oxwaspor/hkim/concrete_kernel_tree_search_new.mat kernel_dict kernel_dict_debug
 %kernel_tree_plot(kernel_dict,m_values,[-1500,-1200],'plots/concrete_tree/');
 

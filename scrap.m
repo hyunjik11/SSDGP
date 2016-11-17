@@ -25,7 +25,6 @@ mauna = 0;
 
 subset = 1;
 m_values=[10,20,40,80,160,320];
-%m_values=[320];
 numiter=1;
 lb_table=zeros(numiter,length(m_values));
 approx_ub_table=zeros(numiter,length(m_values));
@@ -179,3 +178,8 @@ end
 end
 %ub = -temp;
 %fprintf('lb = %4.3f, ub=%4.3f \n',lb,ub);
+
+
+
+
+

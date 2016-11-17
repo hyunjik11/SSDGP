@@ -1,9 +1,9 @@
-function kernel_tree_plot(kernel_dict,m_values,y_lim,directory)
+function kernel_tree_plot(kernel_dict,m_values,y_lim)%,directory)
 keys = kernel_dict.keys; 
 for key_ind = 1:length(keys)
     key=keys{key_ind};
     kernel_cell = kernel_dict(key);
-    lb = kernel_cell{1}; ub = kernel_cell{5}; ne = kernel_cell{6};
+    lb = kernel_cell{1}; ub = kernel_cell{4}; ne = kernel_cell{5};
     figure();
     set(gca,'fontsize',18)
     hold on
@@ -20,10 +20,10 @@ for key_ind = 1:length(keys)
     title(key)
     %legend('UB','fullGP','LB')
     hold off
-    file_name=strcat(directory,key,'.png');
-    file_name = regexprep(file_name,'+','_plus_');
-    file_name = regexprep(file_name,'*','_times_');
-    saveas(gcf,file_name)
+%     file_name=strcat(directory,key,'.png');
+%     file_name = regexprep(file_name,'+','_plus_');
+%     file_name = regexprep(file_name,'*','_times_');
+%     saveas(gcf,file_name)
 end
 
 end
