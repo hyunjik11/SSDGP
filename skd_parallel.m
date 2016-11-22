@@ -1,4 +1,4 @@
-function [kernel_buffer,kernel_buffer_history, kernel_top, kernel_top_history] = skd(x,y,final_depth,num_iter,m_values,seed,S,precond)
+function [kernel_buffer,kernel_buffer_history, kernel_top, kernel_top_history] = skd_parallel(x,y,final_depth,num_iter,m,seed,S,precond)
 % function to carry out scalable kernel discovery on inputs x, outputs y
 % up to depth = final_depth
 % with num_iter rand inits for each kernel
@@ -32,50 +32,36 @@ kernel_new = struct('key',{},'lb',{},'ub',{},'gp_var',{},'indices',{});
 
 rng(seed);
 [n,~] = size(x); % n is n_data
-nm = length(m_values);
 
 for depth = 1:final_depth
     if depth == 1
-        for key_ind = 1:length(base_kernels.keys)
-            keys = base_kernels.keys; key = keys{key_ind}; % name of kernel
+        keys = base_kernels.keys;
+        lk = length(keys);
+        full_lb_table = zeros(num_iter*lk,1);
+        full_gp_var_cell = cell(num_iter*lk,1);
+        full_idx_cell = cell(num_iter*lk,1);
+        parfor kernel_ind = 1:(num_iter*lk)
+            key_ind = floor((kernel_ind-1)/num_iter)+1; % kernel_ind: 1-num_iter -> key_ind: 1 and so on
+            key = keys{key_ind}; % name of kernel
             val = base_kernels(key); % gpcf in base kernel
-            lb_table = zeros(num_iter,nm); % stores lb for all iter
-            ub_table = zeros(1,nm); % stores ub for all m
-            gp_var_cell = cell(num_iter,nm); % stores lb gp_var for all iter
-            idx_cell = cell(num_iter,nm); % stores indices for ind pts for all iter
-            idx_u = 1:n; %idx_u used to store indices of subset for best LB for previous m
-            [gpcf_best,lik_best] = reinitialise_kernel(val,x,y); %temporary initialisation
-            for i = 1:nm
-                m = m_values(i);
-                parfor iter = 1:num_iter % change to parfor for parallel
-                    rng(iter);                    
-                    %%% optim for lb
-                    if i==1 || iter <= 0.8*num_iter % use rand init of hyp for all iter of first m & 4/5 of iters for other m's
-                        [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false);
-                        [gpcf, lik] = reinitialise_kernel(val,x,y);
-                        [lb_table(iter,i),gp_var_cell{iter,i}] = lbfunction(x,y,xu,gpcf,lik);
-                    else % for 1/5 of iter, keep optimal ind pts from previous m, and also keep the hyp
-                        weights = 1e-10*ones(1,n); %weights for sampling
-                        weights(idx_u)=1; %make sure samples idx_u are included
-                        [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false,'Weights',weights);
-                        [lb_table(iter,i),gp_var_cell{iter,i}] = lbfunction(x,y,xu,gpcf_best,lik_best);
-                    end
-                end
-                [~,ind] = max(lb_table(:,i));
-                idx_u = idx_cell{ind,i}; %indices of subset for best LB
-                
-                %%% find ub for hyp from best LB
-                gp_var_best = gp_var_cell{ind,i};
-                gpcf_best = gp_var_best.cf{1};
-                lik_best = gp_var_best.lik;
-                ub_table(i) = ubfunction(x,y,gp_var_best,precond);
-            end
-            %%% gather best result for m=max(m_values), and store in kernel
-            [lb,ind] = max(lb_table(:,nm));
-            ub = ub_table(nm);
-            gp_var = gp_var_cell{ind,nm};
-            indices = idx_cell{ind,nm};
-            kernel = struct('key',key,'lb',lb,'ub',ub,'gp_var',gp_var,'indices',indices);
+            
+            %%% optim for lb
+            rng(kernel_ind);
+            [xu,full_idx_cell{kernel_ind}] = datasample(x,m,1,'Replace',false);
+            [gpcf, lik] = reinitialise_kernel(val,x,y);
+            [full_lb_table(kernel_ind),full_gp_var_cell{kernel_ind}] = lbfunction(x,y,xu,gpcf,lik);
+        end
+        
+        for key_ind = 1:lk
+            key = keys{key_ind}; % name of kernel
+            [lb,ind] = max(full_lb_table(((key_ind-1)*num_iter+1):(key_ind*num_iter)));
+            indices = full_idx_cell{(key_ind-1)*num_iter+ind}; %indices of subset for best LB
+            gp_var_best = full_gp_var_cell{(key_ind-1)*num_iter+ind};    
+            
+            %%% find ub for hyp from best LB
+            ub = ubfunction(x,y,gp_var_best,precond);
+            
+            kernel = struct('key',key,'lb',lb,'ub',ub,'gp_var',gp_var_best,'indices',indices);
             
             %%% compare kernel with previous kernels
             n_buffer = length(kernel_buffer);
@@ -94,12 +80,14 @@ for depth = 1:final_depth
                 kernel_top = kernel;
                 %%% compare kernels in buffer to new kernel_top, and see if
                 %%% they should remain or be deleted
+                del_ind=[]; % indices of kernels to be deleted
                 for buffer_ind = 1:length(kernel_buffer)
                     buffer_kernel = kernel_buffer(buffer_ind);
                     if buffer_kernel.ub < lb % if kernel in buffer has strictly lower interval than kernel_top
-                        kernel_buffer(buffer_ind) = [];
+                        del_ind(length(del_ind)+1)=buffer_ind;
                     end
                 end
+                kernel_buffer(del_ind)=[]; % delete kernels
                 n_buffer_new = length(kernel_buffer);
                 if n_buffer_new < S % if buffer is not full
                     kernel_buffer(n_buffer_new+1) = kernel;
@@ -108,112 +96,100 @@ for depth = 1:final_depth
                     kernel_buffer(buffer_min_ind) = kernel;
                 end
             end
-            fprintf([key ' done. lb=%4.2f, ub = %4.2f \n'],lb,ub);
+            fprintf([key ' : lb = %4.2f, ub = %4.2f \n'],lb,ub);
         end
         kernel_new = kernel_buffer;
     else % if depth > 1
         if isempty(kernel_new) % no new kernels found in search
             return
         else
-        kernel_buffer_old = kernel_buffer; % need for comparing with kernel_buffer after search at current depth
-        for parent_ind = 1:length(kernel_new)
-            key = kernel_new(parent_ind).key;
-            val = kernel_new(parent_ind).gp_var.cf{1};
-            lik = kernel_new(parent_ind).gp_var.lik;
-            for base_key_ind = 1:length(base_kernels.keys)
+            kernel_buffer_old = kernel_buffer; % need for comparing with kernel_buffer after search at current depth
+            lkn = length(kernel_new); lbk = length(base_kernels.keys);
+            lk = lkn*lbk*2;
+            full_lb_table = zeros(num_iter*lk,1);
+            full_gp_var_cell = cell(num_iter*lk,1);
+            full_idx_cell = cell(num_iter*lk,1);
+            full_key_cell = cell(num_iter*lk,1);
+            parfor kernel_ind = 1:(num_iter*lk)
+                parent_ind = floor((kernel_ind-1)/(num_iter*lbk*2))+1; % kernel_ind: 1-num_iter*lbk*2 -> parent_ind: 1 and so on
+                key = kernel_new(parent_ind).key;
+                val = kernel_new(parent_ind).gp_var.cf{1};
+                lik = kernel_new(parent_ind).gp_var.lik;
+                base_key_ind = floor((kernel_ind-(parent_ind-1)*lbk*num_iter*2-1)/(num_iter*2))+1;
                 base_keys = base_kernels.keys; key_base = base_keys{base_key_ind};
                 val_base = base_kernels(key_base);
-                for comp = 0:1 % select kernel
-                    if comp ==0 % kernel in previous depth + base kernel
-                        key_new = ['(' key ')+' key_base];
-                    else % kernel in previous depth * base kernel
-                        key_new = ['(' key ')*' key_base];
-                    end
-                    lb_table = zeros(num_iter,nm); % stores lb for all iter
-                    ub_table = zeros(1,nm); % stores ub for all iter
-                    gp_var_cell = cell(num_iter,nm); % stores lb gp_var for all iter
-                    idx_cell = cell(num_iter,nm); % stores indices for ind pts for all iter
-                    idx_u = 1:n; %idx_u used to store indices of subset for best LB for previous m
-                    [gpcf_best,lik_best] = reinitialise_kernel(val,x,y); %temporary initialisation
-                    for i = 1:nm
-                        m = m_values(i);
-                        parfor iter = 1:num_iter
-                            rng(iter);
-                            %%% optim for lb
-                            if i==1 || iter<=0.8*num_iter  
-                                % for m_min, or for 4/5 of the iter, split into half and half:
-                                [val_base_new,~] = reinitialise_kernel(val_base,x,y);
-                                if comp==0 % kernel in previous depth + base kernel
-                                    gpcf_new = gpcf_sum('cf',{val,val_base_new});
-                                else % kernel in previous depth * base kernel
-                                    gpcf_new = gpcf_prod('cf',{val,val_base_new});
-                                end
-                                if mod(iter,2) == 0 % half: get optimal hyp from previous depth kernels, with new ind pts and hyps for current depth kernel
-                                    [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false);
-                                    [lb_table(iter,i),gp_var_cell{iter,i}] = lbfunction(x,y,xu,gpcf_new,lik);
-                                else % other half: use random init of hyp and ind pts
-                                    [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false);
-                                    [gpcf_new,lik_new] = reinitialise_kernel(gpcf_new,x,y);
-                                    [lb_table(iter,i),gp_var_cell{iter,i}] = lbfunction(x,y,xu,gpcf_new,lik_new);
-                                end
-
-                            else % for 1/5 the iter, keep optimal ind pts and hyp from previous m
-                                weights = 1e-10*ones(1,n); %weights for sampling
-                                weights(idx_u)=1; %make sure samples idx_u are included
-                                [xu,idx_cell{iter,i}] = datasample(x,m,1,'Replace',false,'Weights',weights);
-                                [lb_table(iter,i),gp_var_cell{iter,i}] = lbfunction(x,y,xu,gpcf_best,lik_best);
-                            end
-                        end
-                        [~,ind] = max(lb_table(:,i));
-                        idx_u = idx_cell{ind,i}; %indices of subset for best LB
-                        %%% find ub for hyp from best LB
-                        gp_var_best = gp_var_cell{ind,i};
-                        gpcf_best = gp_var_best.cf{1};
-                        lik_best = gp_var_best.lik;
-                        ub_table(i) = ubfunction(x,y,gp_var_best,precond);
-                    end
-                    %%% gather best result for m=max(m_values), and store in kernel
-                    [lb,ind] = max(lb_table(:,nm));
-                    ub = ub_table(nm);
-                    gp_var = gp_var_cell{ind,nm};
-                    indices = idx_cell{ind,nm};
-                    kernel = struct('key',key_new,'lb',lb,'ub',ub,'gp_var',gp_var,'indices',indices);
-                    
-                    %%% compare kernel with previous kernels
-                    n_buffer = length(kernel_buffer);
-                    if ub < kernel_top.lb % kernel interval strictly below top kernel interval
-                        % ignore kernel
-                    elseif lb < kernel_top.lb % kernel interval overlaps with top kernel interval, but has lower lb than top_kernel
-                        [buffer_min_val, buffer_min_ind] = findmin(kernel_buffer);
-                        if n_buffer < S % buffer not full
-                            kernel_buffer(n_buffer+1) = kernel;
-                        elseif lb > buffer_min_val % if kernel has higher lb than some kernel in buffer
-                            kernel_buffer(buffer_min_ind) = kernel;
-                        end
-                    else % kernel.lb > kernel_top.lb
-                        kernel_top = kernel;
-                        %%% compare kernels in buffer to new kernel_top, and see if
-                        %%% they should remain or be deleted
-                        for buffer_ind = 1:length(kernel_buffer)
-                            buffer_kernel = kernel_buffer(buffer_ind);
-                            if buffer_kernel.ub < lb % if kernel in buffer has strictly lower interval than kernel_top
-                                kernel_buffer(buffer_ind) = [];
-                            end
-                        end
-                        n_buffer_new = length(kernel_buffer);
-                        if n_buffer_new < S % if buffer is not full
-                            kernel_buffer(n_buffer_new+1) = kernel;
-                        else % buffer full, so replace the buffer kernel with the lowest lb
-                            [~, buffer_min_ind] = findmin(kernel_buffer);
-                            kernel_buffer(buffer_min_ind) = kernel;
-                        end
-                    end
-                    fprintf([key_new ' done. lb=%4.2f, ub = %4.2f \n'],lb,ub);
+                comp = floor((kernel_ind-(parent_ind-1)*lbk*num_iter*2-(base_key_ind-1)*num_iter*2-1)/num_iter)+1;
+                if comp == 1 % kernel in previous depth + base kernel
+                    key_new = ['(' key ')+' key_base];
+                else % comp =2. kernel in previous depth * base kernel
+                    key_new = ['(' key ')*' key_base];
                 end
+                full_key_cell{kernel_ind} = key_new;
+                %%% optim for lb:
+                rng(kernel_ind);
+                [val_base_new,~] = reinitialise_kernel(val_base,x,y);
+                if comp == 1 % kernel in previous depth + base kernel
+                    gpcf_new = gpcf_sum('cf',{val,val_base_new});
+                else % kernel in previous depth * base kernel
+                    gpcf_new = gpcf_prod('cf',{val,val_base_new});
+                end
+                if mod(kernel_ind,2) == 0 % half: get optimal hyp from previous depth kernels, with new ind pts and hyps for current depth kernel
+                    [xu,full_idx_cell{kernel_ind}] = datasample(x,m,1,'Replace',false);
+                    [full_lb_table(kernel_ind),full_gp_var_cell{kernel_ind}] = lbfunction(x,y,xu,gpcf_new,lik);
+                else % other half: use random init of hyp and ind pts
+                    [xu,full_idx_cell{kernel_ind}] = datasample(x,m,1,'Replace',false);
+                    [gpcf_new,lik_new] = reinitialise_kernel(gpcf_new,x,y);
+                    [full_lb_table(kernel_ind),full_gp_var_cell{kernel_ind}] = lbfunction(x,y,xu,gpcf_new,lik_new);
+                end
+                %fprintf('kernel_ind:%d, parent_ind:%d, base_key_ind:%d, comp:%d \n',kernel_ind,parent_ind,base_key_ind,comp);
+            end
+            
+            for key_ind = 1:lk
+                key = full_key_cell{(key_ind-1)*num_iter+1};
+                [lb,ind] = max(full_lb_table(((key_ind-1)*num_iter+1):(key_ind*num_iter)));
+                indices = full_idx_cell{(key_ind-1)*num_iter+ind};
+                gp_var_best = full_gp_var_cell{(key_ind-1)*num_iter+ind};
+                
+                %%% find ub for hyp from best lb
+                ub = ubfunction(x,y,gp_var_best,precond);
+                
+                kernel = struct('key',key,'lb',lb,'ub',ub,'gp_var',gp_var_best,'indices',indices);
+                
+                %%% compare kernel with previous kernels
+                n_buffer = length(kernel_buffer);
+                if ub < kernel_top.lb % kernel interval strictly below top kernel interval
+                    % ignore kernel
+                elseif lb < kernel_top.lb % kernel interval overlaps with top kernel interval, but has lower lb than top_kernel
+                    [buffer_min_val, buffer_min_ind] = findmin(kernel_buffer);
+                    if n_buffer < S % buffer not full
+                        kernel_buffer(n_buffer+1) = kernel;
+                    elseif lb > buffer_min_val % if kernel has higher lb than some kernel in buffer
+                        kernel_buffer(buffer_min_ind) = kernel;
+                    end
+                else % kernel.lb > kernel_top.lb
+                    kernel_top = kernel;
+                    %%% compare kernels in buffer to new kernel_top, and see if
+                    %%% they should remain or be deleted
+                    del_ind=[]; % indices of kernels to be deleted
+                    for buffer_ind = 1:length(kernel_buffer)
+                        buffer_kernel = kernel_buffer(buffer_ind);
+                        if buffer_kernel.ub < lb % if kernel in buffer has strictly lower interval than kernel_top
+                            del_ind(length(del_ind)+1)=buffer_ind;
+                        end
+                    end
+                    kernel_buffer(del_ind)=[]; % delete kernels
+                    n_buffer_new = length(kernel_buffer);
+                    if n_buffer_new < S % if buffer is not full
+                        kernel_buffer(n_buffer_new+1) = kernel;
+                    else % buffer full, so replace the buffer kernel with the lowest lb
+                        [~, buffer_min_ind] = findmin(kernel_buffer);
+                        kernel_buffer(buffer_min_ind) = kernel;
+                    end
+                end
+                fprintf([key ' done. lb=%4.2f, ub = %4.2f \n'],lb,ub);
             end
         end
         kernel_new = findnew(kernel_buffer_old,kernel_buffer);
-        end
     end
     kernel_top_history(length(kernel_top_history)+1) = kernel_top;
     kbh_length=length(kernel_buffer_history);

@@ -1,0 +1,734 @@
+SOLAR
+>> tic; skd_experiment; toc; %solar, m_values = [320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN done. lb=-443.32, ub = -443.32
+PER done. lb=-578.46, ub = -578.46
+SE done. lb=-353.59, ub = -353.59
+depth 1 done
+(SE)+LIN done. lb=-355.76, ub = -355.76
+(SE)*LIN done. lb=-372.26, ub = -372.26
+(SE)+PER done. lb=-167.15, ub = -167.15
+(SE)*PER done. lb=-119.80, ub = -119.09
+(SE)+SE done. lb=-138.92, ub = -137.98
+(SE)*SE done. lb=-360.45, ub = -360.45
+depth 2 done
+((SE)*PER)+LIN done. lb=-117.39, ub = -116.23
+((SE)*PER)*LIN done. lb=-232.82, ub = -232.82
+((SE)*PER)+PER done. lb=-125.58, ub = -124.94
+((SE)*PER)*PER done. lb=-113.39, ub = -110.99
+((SE)*PER)+SE done. lb=-122.70, ub = -121.57
+((SE)*PER)*SE done. lb=-125.57, ub = -125.09
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 997.441050 seconds.
+
+>> tic; skd_experiment; toc; %solar, m_values=[80,...,320];
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN done. lb=-443.32, ub = -443.32
+PER done. lb=-578.47, ub = -578.47
+SE done. lb=-353.59, ub = -353.59
+depth 1 done
+(SE)+LIN done. lb=-355.76, ub = -355.76
+(SE)*LIN done. lb=-372.26, ub = -372.26
+(SE)+PER done. lb=-167.15, ub = -167.15
+(SE)*PER done. lb=-119.80, ub = -119.09
+(SE)+SE done. lb=-138.92, ub = -137.98
+(SE)*SE done. lb=-360.45, ub = -360.45
+depth 2 done
+((SE)*PER)+LIN done. lb=-117.74, ub = -116.40
+((SE)*PER)*LIN done. lb=-232.82, ub = -232.82
+((SE)*PER)+PER done. lb=-125.58, ub = -124.94
+((SE)*PER)*PER done. lb=-113.22, ub = -112.16
+((SE)*PER)+SE done. lb=-101.34, ub = -100.09
+((SE)*PER)*SE done. lb=-125.57, ub = -125.09
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 1497.975851 seconds.
+
+>> tic; skd_experiment; toc; %solar,m_values=[10,20,40,80,160,320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN done. lb=-443.32, ub = -443.32
+PER done. lb=-576.17, ub = -576.17
+SE done. lb=-353.59, ub = -353.59
+depth 1 done
+(SE)+LIN done. lb=-355.76, ub = -355.76
+(SE)*LIN done. lb=-372.26, ub = -372.26
+(SE)+PER done. lb=-167.15, ub = -167.15
+(SE)*PER done. lb=-119.56, ub = -119.11
+(SE)+SE done. lb=-138.92, ub = -137.98
+(SE)*SE done. lb=-360.45, ub = -360.45
+depth 2 done
+((SE)*PER)+LIN done. lb=-117.74, ub = -116.40
+((SE)*PER)*LIN done. lb=-232.82, ub = -232.82
+((SE)*PER)+PER done. lb=-125.38, ub = -124.17
+((SE)*PER)*PER done. lb=-113.22, ub = -112.16
+((SE)*PER)+SE done. lb=-101.34, ub = -100.09
+((SE)*PER)*SE done. lb=-125.57, ub = -125.09
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 1692.583303 seconds.
+
+MAUNA
+>> tic; skd_experiment; toc; %mauna, m_values=[320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN done. lb=332.55, ub = 332.55
+PER done. lb=672.52, ub = 672.52
+SE done. lb=685.36, ub = 685.36
+depth 1 done
+(SE)+LIN done. lb=690.72, ub = 690.72
+(SE)*LIN done. lb=651.28, ub = 651.28
+(SE)+PER done. lb=1757.48, ub = 1757.48
+(SE)*PER done. lb=1666.73, ub = 1666.73
+(SE)+SE done. lb=678.78, ub = 678.78
+(SE)*SE done. lb=665.78, ub = 665.78
+depth 2 done
+((SE)+PER)+LIN done. lb=1792.56, ub = 1792.56
+((SE)+PER)*LIN done. lb=831.89, ub = 831.89
+((SE)+PER)+PER done. lb=1725.31, ub = 1725.31
+((SE)+PER)*PER done. lb=1657.47, ub = 1657.47
+((SE)+PER)+SE done. lb=1793.14, ub = 1793.14
+((SE)+PER)*SE done. lb=1954.36, ub = 1954.41
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 3048.987984 seconds.
+
+>> tic; skd_experiment; toc; %mauna, m_values = [80,160,320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN done. lb=332.55, ub = 332.55
+PER done. lb=672.52, ub = 672.52
+SE done. lb=685.36, ub = 685.36
+depth 1 done
+(SE)+LIN done. lb=690.74, ub = 690.74
+(SE)*LIN done. lb=651.28, ub = 651.28
+(SE)+PER done. lb=1757.48, ub = 1757.48
+(SE)*PER done. lb=1726.09, ub = 1726.10
+(SE)+SE done. lb=678.78, ub = 678.78
+(SE)*SE done. lb=665.78, ub = 665.78
+depth 2 done
+((SE)+PER)+LIN done. lb=1796.56, ub = 1796.56
+((SE)+PER)*LIN done. lb=845.10, ub = 845.10
+((SE)+PER)+PER done. lb=1769.25, ub = 1769.25
+((SE)+PER)*PER done. lb=1658.15, ub = 1658.16
+((SE)+PER)+SE done. lb=1793.14, ub = 1793.14
+((SE)+PER)*SE done. lb=1954.36, ub = 1954.41
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 3991.237381 seconds.
+
+>> tic; skd_experiment; toc; %mauna, m_values=[10,...320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN done. lb=332.55, ub = 332.55
+PER done. lb=672.52, ub = 672.52
+SE done. lb=685.36, ub = 685.36
+depth 1 done
+(SE)+LIN done. lb=690.74, ub = 690.74
+(SE)*LIN done. lb=651.28, ub = 651.28
+(SE)+PER done. lb=1757.48, ub = 1757.48
+(SE)*PER done. lb=1726.09, ub = 1726.10
+(SE)+SE done. lb=678.83, ub = 678.83
+(SE)*SE done. lb=665.78, ub = 665.78
+depth 2 done
+((SE)+PER)+LIN done. lb=1880.44, ub = 1880.45
+((SE)+PER)*LIN done. lb=843.60, ub = 843.60
+((SE)+PER)+PER done. lb=1769.25, ub = 1769.25
+((SE)+PER)*PER done. lb=1792.23, ub = 1792.24
+((SE)+PER)+SE done. lb=1825.15, ub = 1825.16
+((SE)+PER)*SE done. lb=1954.36, ub = 1954.41
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 4460.299390 seconds.
+
+CONCRETE
+>> tic; skd_experiment; toc; %concrete, m_values=[320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN1 done. lb=-1324.69, ub = -1324.69
+LIN2 done. lb=-1460.48, ub = -1460.48
+LIN3 done. lb=-1463.89, ub = -1463.89
+LIN4 done. lb=-1425.61, ub = -1425.61
+LIN5 done. lb=-1396.87, ub = -1396.87
+LIN6 done. lb=-1455.93, ub = -1455.93
+LIN7 done. lb=-1455.54, ub = -1455.54
+LIN8 done. lb=-1411.91, ub = -1411.91
+PER1 done. lb=-1407.87, ub = -1407.78
+PER2 done. lb=-1408.87, ub = -1408.87
+PER3 done. lb=-1469.37, ub = -1469.37
+PER4 done. lb=-1362.81, ub = -1345.75
+PER5 done. lb=-1395.41, ub = -1385.64
+PER6 done. lb=-1386.59, ub = -1372.17
+PER7 done. lb=-1388.45, ub = -1385.50
+PER8 done. lb=-1236.91, ub = -1236.91
+SE1 done. lb=-1314.72, ub = -1314.70
+SE2 done. lb=-1383.81, ub = -1367.85
+SE3 done. lb=-1468.30, ub = -1468.23
+SE4 done. lb=-1337.48, ub = -1333.39
+SE5 done. lb=-1388.60, ub = -1377.81
+SE6 done. lb=-1378.93, ub = -1362.24
+SE7 done. lb=-1379.66, ub = -1364.66
+SE8 done. lb=-1233.65, ub = -1233.65
+depth 1 done
+(SE8)+LIN1 done. lb=-967.98, ub = -967.98
+(SE8)*LIN1 done. lb=-1290.65, ub = -1290.65
+(SE8)+LIN2 done. lb=-1225.23, ub = -1225.23
+(SE8)*LIN2 done. lb=-1437.79, ub = -1437.79
+(SE8)+LIN3 done. lb=-1217.53, ub = -1217.53
+(SE8)*LIN3 done. lb=-1389.06, ub = -1389.06
+(SE8)+LIN4 done. lb=-1156.66, ub = -1156.66
+(SE8)*LIN4 done. lb=-1356.05, ub = -1356.05
+(SE8)+LIN5 done. lb=-1156.91, ub = -1156.91
+(SE8)*LIN5 done. lb=-1325.81, ub = -1325.81
+(SE8)+LIN6 done. lb=-1224.47, ub = -1224.47
+(SE8)*LIN6 done. lb=-1435.88, ub = -1435.88
+(SE8)+LIN7 done. lb=-1216.97, ub = -1216.97
+(SE8)*LIN7 done. lb=-1449.45, ub = -1449.45
+(SE8)+LIN8 done. lb=-1236.60, ub = -1236.60
+(SE8)*LIN8 done. lb=-1247.58, ub = -1247.58
+(SE8)+PER1 done. lb=-1092.29, ub = -1014.76
+(SE8)*PER1 done. lb=-1241.84, ub = -1241.72
+(SE8)+PER2 done. lb=-1139.82, ub = -1139.79
+(SE8)*PER2 done. lb=-1203.66, ub = -1200.97
+(SE8)+PER3 done. lb=-1213.50, ub = -1203.05
+(SE8)*PER3 done. lb=-1210.36, ub = -1210.30
+(SE8)+PER4 done. lb=-1032.53, ub = -978.73
+(SE8)*PER4 done. lb=-1215.26, ub = -1214.64
+(SE8)+PER5 done. lb=-1129.78, ub = -1096.04
+(SE8)*PER5 done. lb=-1186.97, ub = -1181.94
+(SE8)+PER6 done. lb=-1088.16, ub = -1073.69
+(SE8)*PER6 done. lb=-1218.18, ub = -1210.83
+(SE8)+PER7 done. lb=-1093.75, ub = -1042.41
+(SE8)*PER7 done. lb=-1220.76, ub = -1214.85
+(SE8)+PER8 done. lb=-1242.50, ub = -1242.50
+(SE8)*PER8 done. lb=-1241.66, ub = -1240.32
+(SE8)+SE1 done. lb=-873.51, ub = -850.42
+(SE8)*SE1 done. lb=-992.06, ub = -980.52
+(SE8)+SE2 done. lb=-1090.31, ub = -1050.85
+(SE8)*SE2 done. lb=-1226.83, ub = -1219.23
+(SE8)+SE3 done. lb=-1209.64, ub = -1207.74
+(SE8)*SE3 done. lb=-1212.81, ub = -1208.63
+(SE8)+SE4 done. lb=-1008.23, ub = -922.95
+(SE8)*SE4 done. lb=-1116.96, ub = -1111.29
+(SE8)+SE5 done. lb=-1076.33, ub = -1042.16
+(SE8)*SE5 done. lb=-1155.85, ub = -1151.98
+(SE8)+SE6 done. lb=-1060.76, ub = -1010.69
+(SE8)*SE6 done. lb=-1217.87, ub = -1206.92
+(SE8)+SE7 done. lb=-1052.93, ub = -1001.87
+(SE8)*SE7 done. lb=-1249.84, ub = -1240.72
+(SE8)+SE8 done. lb=-1239.30, ub = -1239.30
+(SE8)*SE8 done. lb=-1240.60, ub = -1240.60
+depth 2 done
+((SE8)+SE1)+LIN1 done. lb=-820.96, ub = -779.66
+((SE8)+SE1)*LIN1 done. lb=-1277.26, ub = -1272.22
+((SE8)+SE1)+LIN2 done. lb=-741.88, ub = -734.35
+((SE8)+SE1)*LIN2 done. lb=-1375.16, ub = -1375.16
+((SE8)+SE1)+LIN3 done. lb=-888.74, ub = -832.66
+((SE8)+SE1)*LIN3 done. lb=-1307.21, ub = -1275.78
+((SE8)+SE1)+LIN4 done. lb=-835.52, ub = -821.86
+((SE8)+SE1)*LIN4 done. lb=-1323.42, ub = -1310.85
+((SE8)+SE1)+LIN5 done. lb=-807.51, ub = -795.38
+((SE8)+SE1)*LIN5 done. lb=-1258.98, ub = -1256.21
+((SE8)+SE1)+LIN6 done. lb=-879.54, ub = -819.32
+((SE8)+SE1)*LIN6 done. lb=-1400.50, ub = -1388.40
+((SE8)+SE1)+LIN7 done. lb=-883.48, ub = -865.94
+((SE8)+SE1)*LIN7 done. lb=-1427.68, ub = -1417.17
+((SE8)+SE1)+LIN8 done. lb=-888.06, ub = -831.57
+((SE8)+SE1)*LIN8 done. lb=-1209.80, ub = -1206.84
+((SE8)+SE1)+PER1 done. lb=-879.13, ub = -852.89
+((SE8)+SE1)*PER1 done. lb=-874.27, ub = -848.42
+((SE8)+SE1)+PER2 done. lb=-750.28, ub = -729.12
+((SE8)+SE1)*PER2 done. lb=-761.79, ub = -744.57
+((SE8)+SE1)+PER3 done. lb=-891.61, ub = -876.11
+((SE8)+SE1)*PER3 done. lb=-866.87, ub = -815.90
+((SE8)+SE1)+PER4 done. lb=-756.85, ub = -737.09
+((SE8)+SE1)*PER4 done. lb=-767.97, ub = -743.41
+((SE8)+SE1)+PER5 done. lb=-811.62, ub = -793.32
+((SE8)+SE1)*PER5 done. lb=-804.64, ub = -744.01
+((SE8)+SE1)+PER6 done. lb=-864.37, ub = -843.51
+((SE8)+SE1)*PER6 done. lb=-866.48, ub = -824.47
+((SE8)+SE1)+PER7 done. lb=-864.73, ub = -850.65
+((SE8)+SE1)*PER7 done. lb=-842.05, ub = -815.01
+((SE8)+SE1)+PER8 done. lb=-888.75, ub = -872.69
+((SE8)+SE1)*PER8 done. lb=-894.78, ub = -875.16
+((SE8)+SE1)+SE1 done. lb=-839.74, ub = -802.36
+((SE8)+SE1)*SE1 done. lb=-866.28, ub = -816.25
+((SE8)+SE1)+SE2 done. lb=-688.64, ub = -668.58
+((SE8)+SE1)*SE2 done. lb=-730.82, ub = -698.38
+((SE8)+SE1)+SE3 done. lb=-861.90, ub = -831.79
+((SE8)+SE1)*SE3 done. lb=-885.35, ub = -842.02
+((SE8)+SE1)+SE4 done. lb=-755.21, ub = -737.00
+((SE8)+SE1)*SE4 done. lb=-751.04, ub = -727.73
+((SE8)+SE1)+SE5 done. lb=-782.88, ub = -758.26
+((SE8)+SE1)*SE5 done. lb=-773.69, ub = -736.38
+((SE8)+SE1)+SE6 done. lb=-808.71, ub = -764.47
+((SE8)+SE1)*SE6 done. lb=-898.32, ub = -836.41
+((SE8)+SE1)+SE7 done. lb=-796.03, ub = -748.92
+((SE8)+SE1)*SE7 done. lb=-894.35, ub = -866.07
+((SE8)+SE1)+SE8 done. lb=-880.45, ub = -857.35
+((SE8)+SE1)*SE8 done. lb=-962.18, ub = -932.30
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 18066.923547 seconds.
+
+>> tic; skd_experiment; toc; %concrete,m_values=[80,...,320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN1 done. lb=-1324.69, ub = -1324.69
+LIN2 done. lb=-1460.48, ub = -1460.48
+LIN3 done. lb=-1463.89, ub = -1463.89
+LIN4 done. lb=-1425.61, ub = -1425.61
+LIN5 done. lb=-1396.87, ub = -1396.87
+LIN6 done. lb=-1455.93, ub = -1455.93
+LIN7 done. lb=-1455.54, ub = -1455.54
+LIN8 done. lb=-1411.91, ub = -1411.91
+PER1 done. lb=-1385.04, ub = -1370.66
+PER2 done. lb=-1396.77, ub = -1395.94
+PER3 done. lb=-1469.11, ub = -1469.11
+PER4 done. lb=-1362.81, ub = -1345.75
+PER5 done. lb=-1387.10, ub = -1377.51
+PER6 done. lb=-1382.12, ub = -1372.09
+PER7 done. lb=-1402.71, ub = -1402.03
+PER8 done. lb=-1237.42, ub = -1237.42
+SE1 done. lb=-1314.72, ub = -1314.70
+SE2 done. lb=-1383.81, ub = -1367.85
+SE3 done. lb=-1468.30, ub = -1468.23
+SE4 done. lb=-1337.48, ub = -1333.39
+SE5 done. lb=-1388.76, ub = -1381.51
+SE6 done. lb=-1378.93, ub = -1362.24
+SE7 done. lb=-1379.66, ub = -1364.66
+SE8 done. lb=-1233.66, ub = -1233.66
+depth 1 done
+(SE8)+LIN1 done. lb=-967.98, ub = -967.98
+(SE8)*LIN1 done. lb=-1290.66, ub = -1290.66
+(SE8)+LIN2 done. lb=-1225.23, ub = -1225.23
+(SE8)*LIN2 done. lb=-1437.79, ub = -1437.79
+(SE8)+LIN3 done. lb=-1217.50, ub = -1217.50
+(SE8)*LIN3 done. lb=-1389.06, ub = -1389.06
+(SE8)+LIN4 done. lb=-1156.66, ub = -1156.66
+(SE8)*LIN4 done. lb=-1356.05, ub = -1356.05
+(SE8)+LIN5 done. lb=-1156.92, ub = -1156.92
+(SE8)*LIN5 done. lb=-1325.81, ub = -1325.81
+(SE8)+LIN6 done. lb=-1224.48, ub = -1224.48
+(SE8)*LIN6 done. lb=-1435.88, ub = -1435.88
+(SE8)+LIN7 done. lb=-1216.98, ub = -1216.98
+(SE8)*LIN7 done. lb=-1449.46, ub = -1449.46
+(SE8)+LIN8 done. lb=-1236.58, ub = -1236.58
+(SE8)*LIN8 done. lb=-1247.58, ub = -1247.58
+(SE8)+PER1 done. lb=-1139.95, ub = -1136.06
+(SE8)*PER1 done. lb=-1239.51, ub = -1239.26
+(SE8)+PER2 done. lb=-1139.82, ub = -1139.79
+(SE8)*PER2 done. lb=-1203.48, ub = -1200.78
+(SE8)+PER3 done. lb=-1220.18, ub = -1220.18
+(SE8)*PER3 done. lb=-1210.36, ub = -1210.30
+(SE8)+PER4 done. lb=-1103.97, ub = -1101.92
+(SE8)*PER4 done. lb=-1131.02, ub = -1121.59
+(SE8)+PER5 done. lb=-1113.20, ub = -1104.59
+(SE8)*PER5 done. lb=-1161.28, ub = -1161.12
+(SE8)+PER6 done. lb=-1088.16, ub = -1073.69
+(SE8)*PER6 done. lb=-1219.58, ub = -1216.08
+(SE8)+PER7 done. lb=-1093.75, ub = -1042.41
+(SE8)*PER7 done. lb=-1218.86, ub = -1214.80
+(SE8)+PER8 done. lb=-1241.74, ub = -1241.74
+(SE8)*PER8 done. lb=-1241.54, ub = -1240.12
+(SE8)+SE1 done. lb=-873.51, ub = -850.42
+(SE8)*SE1 done. lb=-992.06, ub = -980.52
+(SE8)+SE2 done. lb=-1090.31, ub = -1050.85
+(SE8)*SE2 done. lb=-1227.56, ub = -1219.32
+(SE8)+SE3 done. lb=-1209.64, ub = -1207.74
+(SE8)*SE3 done. lb=-1212.56, ub = -1211.06
+(SE8)+SE4 done. lb=-988.90, ub = -917.57
+(SE8)*SE4 done. lb=-1116.89, ub = -1110.40
+(SE8)+SE5 done. lb=-1076.33, ub = -1042.16
+(SE8)*SE5 done. lb=-1158.68, ub = -1148.13
+(SE8)+SE6 done. lb=-1060.76, ub = -1010.69
+(SE8)*SE6 done. lb=-1217.37, ub = -1209.19
+(SE8)+SE7 done. lb=-1050.81, ub = -972.70
+(SE8)*SE7 done. lb=-1247.53, ub = -1238.65
+(SE8)+SE8 done. lb=-1239.30, ub = -1239.30
+(SE8)*SE8 done. lb=-1240.60, ub = -1240.60
+depth 2 done
+((SE8)+SE1)+LIN1 done. lb=-820.96, ub = -779.66
+((SE8)+SE1)*LIN1 done. lb=-1276.98, ub = -1272.50
+((SE8)+SE1)+LIN2 done. lb=-739.88, ub = -731.70
+((SE8)+SE1)*LIN2 done. lb=-1376.13, ub = -1376.13
+((SE8)+SE1)+LIN3 done. lb=-886.01, ub = -870.76
+((SE8)+SE1)*LIN3 done. lb=-1307.21, ub = -1275.78
+((SE8)+SE1)+LIN4 done. lb=-830.18, ub = -820.62
+((SE8)+SE1)*LIN4 done. lb=-1323.42, ub = -1310.85
+((SE8)+SE1)+LIN5 done. lb=-804.75, ub = -795.43
+((SE8)+SE1)*LIN5 done. lb=-1258.43, ub = -1256.75
+((SE8)+SE1)+LIN6 done. lb=-876.14, ub = -858.67
+((SE8)+SE1)*LIN6 done. lb=-1398.76, ub = -1389.22
+((SE8)+SE1)+LIN7 done. lb=-878.23, ub = -863.65
+((SE8)+SE1)*LIN7 done. lb=-1427.68, ub = -1417.17
+((SE8)+SE1)+LIN8 done. lb=-885.07, ub = -869.76
+((SE8)+SE1)*LIN8 done. lb=-1209.80, ub = -1206.84
+((SE8)+SE1)+PER1 done. lb=-878.26, ub = -859.08
+((SE8)+SE1)*PER1 done. lb=-874.27, ub = -848.42
+((SE8)+SE1)+PER2 done. lb=-750.28, ub = -729.12
+((SE8)+SE1)*PER2 done. lb=-761.79, ub = -744.57
+((SE8)+SE1)+PER3 done. lb=-877.77, ub = -854.65
+((SE8)+SE1)*PER3 done. lb=-860.38, ub = -829.23
+((SE8)+SE1)+PER4 done. lb=-756.85, ub = -737.09
+((SE8)+SE1)*PER4 done. lb=-767.97, ub = -743.41
+((SE8)+SE1)+PER5 done. lb=-802.97, ub = -783.91
+((SE8)+SE1)*PER5 done. lb=-787.33, ub = -773.63
+((SE8)+SE1)+PER6 done. lb=-864.37, ub = -843.51
+((SE8)+SE1)*PER6 done. lb=-842.78, ub = -783.89
+((SE8)+SE1)+PER7 done. lb=-853.16, ub = -847.99
+((SE8)+SE1)*PER7 done. lb=-842.05, ub = -815.01
+((SE8)+SE1)+PER8 done. lb=-886.62, ub = -873.31
+((SE8)+SE1)*PER8 done. lb=-888.54, ub = -874.67
+((SE8)+SE1)+SE1 done. lb=-832.36, ub = -793.76
+((SE8)+SE1)*SE1 done. lb=-854.97, ub = -810.21
+((SE8)+SE1)+SE2 done. lb=-688.64, ub = -668.58
+((SE8)+SE1)*SE2 done. lb=-730.82, ub = -698.38
+((SE8)+SE1)+SE3 done. lb=-861.90, ub = -831.79
+((SE8)+SE1)*SE3 done. lb=-885.35, ub = -842.02
+((SE8)+SE1)+SE4 done. lb=-755.21, ub = -737.00
+((SE8)+SE1)*SE4 done. lb=-751.04, ub = -727.73
+((SE8)+SE1)+SE5 done. lb=-782.88, ub = -758.26
+((SE8)+SE1)*SE5 done. lb=-773.69, ub = -736.38
+((SE8)+SE1)+SE6 done. lb=-802.64, ub = -750.31
+((SE8)+SE1)*SE6 done. lb=-897.43, ub = -847.08
+((SE8)+SE1)+SE7 done. lb=-796.03, ub = -748.92
+((SE8)+SE1)*SE7 done. lb=-894.35, ub = -866.07
+((SE8)+SE1)+SE8 done. lb=-880.45, ub = -857.35
+((SE8)+SE1)*SE8 done. lb=-951.72, ub = -933.14
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 25054.901397 seconds.
+
+>> tic; skd_experiment; toc; %concrete,m_values=[10,...,320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN1 done. lb=-1324.69, ub = -1324.69
+LIN2 done. lb=-1460.48, ub = -1460.48
+LIN3 done. lb=-1463.89, ub = -1463.89
+LIN4 done. lb=-1425.61, ub = -1425.61
+LIN5 done. lb=-1396.87, ub = -1396.87
+LIN6 done. lb=-1455.93, ub = -1455.93
+LIN7 done. lb=-1455.54, ub = -1455.54
+LIN8 done. lb=-1411.91, ub = -1411.91
+PER1 done. lb=-1314.54, ub = -1312.68
+PER2 done. lb=-1396.77, ub = -1395.94
+PER3 done. lb=-1469.15, ub = -1469.15
+PER4 done. lb=-1354.27, ub = -1348.14
+PER5 done. lb=-1394.88, ub = -1394.88
+PER6 done. lb=-1382.12, ub = -1372.09
+PER7 done. lb=-1399.85, ub = -1399.09
+PER8 done. lb=-1237.42, ub = -1237.42
+SE1 done. lb=-1314.72, ub = -1314.70
+SE2 done. lb=-1383.81, ub = -1367.85
+SE3 done. lb=-1468.30, ub = -1468.23
+SE4 done. lb=-1337.48, ub = -1333.39
+SE5 done. lb=-1388.76, ub = -1381.51
+SE6 done. lb=-1378.93, ub = -1362.24
+SE7 done. lb=-1379.66, ub = -1364.66
+SE8 done. lb=-1233.66, ub = -1233.66
+depth 1 done
+(SE8)+LIN1 done. lb=-967.98, ub = -967.98
+(SE8)*LIN1 done. lb=-1290.66, ub = -1290.66
+(SE8)+LIN2 done. lb=-1225.23, ub = -1225.23
+(SE8)*LIN2 done. lb=-1437.79, ub = -1437.79
+(SE8)+LIN3 done. lb=-1217.50, ub = -1217.50
+(SE8)*LIN3 done. lb=-1389.06, ub = -1389.06
+(SE8)+LIN4 done. lb=-1156.66, ub = -1156.66
+(SE8)*LIN4 done. lb=-1356.05, ub = -1356.05
+(SE8)+LIN5 done. lb=-1156.92, ub = -1156.92
+(SE8)*LIN5 done. lb=-1325.81, ub = -1325.81
+(SE8)+LIN6 done. lb=-1224.48, ub = -1224.48
+(SE8)*LIN6 done. lb=-1435.88, ub = -1435.88
+(SE8)+LIN7 done. lb=-1216.97, ub = -1216.97
+(SE8)*LIN7 done. lb=-1449.46, ub = -1449.46
+(SE8)+LIN8 done. lb=-1236.59, ub = -1236.59
+(SE8)*LIN8 done. lb=-1247.58, ub = -1247.58
+(SE8)+PER1 done. lb=-1043.09, ub = -994.96
+(SE8)*PER1 done. lb=-1230.55, ub = -1230.05
+(SE8)+PER2 done. lb=-1138.51, ub = -1136.95
+(SE8)*PER2 done. lb=-1194.81, ub = -1194.70
+(SE8)+PER3 done. lb=-1222.22, ub = -1222.22
+(SE8)*PER3 done. lb=-1210.36, ub = -1210.30
+(SE8)+PER4 done. lb=-1086.50, ub = -890.72
+(SE8)*PER4 done. lb=-1125.88, ub = -1121.27
+(SE8)+PER5 done. lb=-1089.76, ub = -1088.58
+(SE8)*PER5 done. lb=-1172.30, ub = -1172.24
+(SE8)+PER6 done. lb=-1048.76, ub = -1041.20
+(SE8)*PER6 done. lb=-1219.58, ub = -1216.08
+(SE8)+PER7 done. lb=-1093.75, ub = -1042.41
+(SE8)*PER7 done. lb=-1219.16, ub = -1214.96
+(SE8)+PER8 done. lb=-1241.33, ub = -1241.33
+(SE8)*PER8 done. lb=-1241.54, ub = -1240.12
+(SE8)+SE1 done. lb=-873.51, ub = -850.42
+(SE8)*SE1 done. lb=-992.06, ub = -980.52
+(SE8)+SE2 done. lb=-1090.31, ub = -1050.85
+(SE8)*SE2 done. lb=-1226.60, ub = -1219.16
+(SE8)+SE3 done. lb=-1209.64, ub = -1207.74
+(SE8)*SE3 done. lb=-1212.56, ub = -1211.06
+(SE8)+SE4 done. lb=-988.90, ub = -917.57
+(SE8)*SE4 done. lb=-1116.63, ub = -1110.14
+(SE8)+SE5 done. lb=-1076.33, ub = -1042.16
+(SE8)*SE5 done. lb=-1158.68, ub = -1148.13
+(SE8)+SE6 done. lb=-1057.63, ub = -976.53
+(SE8)*SE6 done. lb=-1217.37, ub = -1209.19
+(SE8)+SE7 done. lb=-1050.81, ub = -972.70
+(SE8)*SE7 done. lb=-1247.27, ub = -1239.22
+(SE8)+SE8 done. lb=-1239.30, ub = -1239.30
+(SE8)*SE8 done. lb=-1240.60, ub = -1240.60
+depth 2 done
+((SE8)+SE1)+LIN1 done. lb=-820.96, ub = -779.66
+((SE8)+SE1)*LIN1 done. lb=-1276.98, ub = -1272.50
+((SE8)+SE1)+LIN2 done. lb=-739.88, ub = -731.70
+((SE8)+SE1)*LIN2 done. lb=-1376.13, ub = -1376.13
+((SE8)+SE1)+LIN3 done. lb=-886.01, ub = -870.76
+((SE8)+SE1)*LIN3 done. lb=-1307.21, ub = -1275.78
+((SE8)+SE1)+LIN4 done. lb=-830.18, ub = -820.62
+((SE8)+SE1)*LIN4 done. lb=-1323.42, ub = -1310.85
+((SE8)+SE1)+LIN5 done. lb=-804.75, ub = -795.43
+((SE8)+SE1)*LIN5 done. lb=-1258.43, ub = -1256.75
+((SE8)+SE1)+LIN6 done. lb=-876.14, ub = -858.67
+((SE8)+SE1)*LIN6 done. lb=-1395.50, ub = -1390.22
+((SE8)+SE1)+LIN7 done. lb=-878.23, ub = -863.65
+((SE8)+SE1)*LIN7 done. lb=-1427.68, ub = -1417.17
+((SE8)+SE1)+LIN8 done. lb=-885.07, ub = -869.76
+((SE8)+SE1)*LIN8 done. lb=-1209.80, ub = -1206.84
+((SE8)+SE1)+PER1 done. lb=-856.05, ub = -815.61
+((SE8)+SE1)*PER1 done. lb=-874.27, ub = -848.42
+((SE8)+SE1)+PER2 done. lb=-738.10, ub = -728.49
+((SE8)+SE1)*PER2 done. lb=-761.79, ub = -744.57
+((SE8)+SE1)+PER3 done. lb=-877.77, ub = -854.65
+((SE8)+SE1)*PER3 done. lb=-860.38, ub = -829.23
+((SE8)+SE1)+PER4 done. lb=-756.85, ub = -737.09
+((SE8)+SE1)*PER4 done. lb=-767.97, ub = -743.41
+((SE8)+SE1)+PER5 done. lb=-785.17, ub = -775.47
+((SE8)+SE1)*PER5 done. lb=-787.33, ub = -773.63
+((SE8)+SE1)+PER6 done. lb=-864.37, ub = -843.51
+((SE8)+SE1)*PER6 done. lb=-866.48, ub = -824.47
+((SE8)+SE1)+PER7 done. lb=-853.16, ub = -847.99
+((SE8)+SE1)*PER7 done. lb=-842.05, ub = -815.01
+((SE8)+SE1)+PER8 done. lb=-879.31, ub = -861.76
+((SE8)+SE1)*PER8 done. lb=-894.78, ub = -875.16
+((SE8)+SE1)+SE1 done. lb=-832.36, ub = -793.76
+((SE8)+SE1)*SE1 done. lb=-854.97, ub = -810.21
+((SE8)+SE1)+SE2 done. lb=-688.64, ub = -668.58
+((SE8)+SE1)*SE2 done. lb=-730.82, ub = -698.38
+((SE8)+SE1)+SE3 done. lb=-861.90, ub = -831.79
+((SE8)+SE1)*SE3 done. lb=-885.35, ub = -842.02
+((SE8)+SE1)+SE4 done. lb=-754.26, ub = -732.59
+((SE8)+SE1)*SE4 done. lb=-751.04, ub = -727.73
+((SE8)+SE1)+SE5 done. lb=-782.88, ub = -758.26
+((SE8)+SE1)*SE5 done. lb=-773.69, ub = -736.38
+((SE8)+SE1)+SE6 done. lb=-812.44, ub = -753.22
+((SE8)+SE1)*SE6 done. lb=-897.43, ub = -847.08
+((SE8)+SE1)+SE7 done. lb=-796.03, ub = -748.92
+((SE8)+SE1)*SE7 done. lb=-894.35, ub = -866.07
+((SE8)+SE1)+SE8 done. lb=-880.45, ub = -857.35
+((SE8)+SE1)*SE8 done. lb=-951.72, ub = -933.14
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 26493.434786 seconds.
+
+PP
+>> tic; skd_experiment; toc; %pp m_values=[320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN1 done. lb=-2625.76, ub = -2625.76
+LIN2 done. lb=-6832.31, ub = -6832.31
+LIN3 done. lb=-12092.14, ub = -12092.14
+LIN4 done. lb=-12800.88, ub = -12800.88
+PER1 done. lb=-7509.96, ub = -7509.96
+PER2 done. lb=-13565.62, ub = -13565.62
+PER3 done. lb=-13592.08, ub = -13592.08
+PER4 done. lb=-13596.44, ub = -13596.44
+SE1 done. lb=-2001.90, ub = -2001.88
+SE2 done. lb=-5785.37, ub = -5710.39
+SE3 done. lb=-11885.19, ub = -11881.71
+SE4 done. lb=-12808.83, ub = -12808.72
+depth 1 done
+(SE1)+LIN1 done. lb=-1994.98, ub = -1994.98
+(SE1)*LIN1 done. lb=-2025.99, ub = -2025.98
+(SE1)+LIN2 done. lb=-993.40, ub = -993.37
+(SE1)*LIN2 done. lb=-4580.93, ub = -4580.87
+(SE1)+LIN3 done. lb=-1915.51, ub = -1915.51
+(SE1)*LIN3 done. lb=-11501.83, ub = -11501.81
+(SE1)+LIN4 done. lb=-1089.71, ub = -1089.71
+(SE1)*LIN4 done. lb=-11513.69, ub = -11513.54
+(SE1)+PER1 done. lb=-2022.69, ub = -2022.69
+(SE1)*PER1 done. lb=-2013.78, ub = -2013.78
+(SE1)+PER2 done. lb=-1923.36, ub = -1923.34
+(SE1)*PER2 done. lb=-1813.84, ub = -1807.89
+(SE1)+PER3 done. lb=-2021.49, ub = -2021.48
+(SE1)*PER3 done. lb=-2037.14, ub = -2037.14
+(SE1)+PER4 done. lb=-2023.54, ub = -2023.51
+(SE1)*PER4 done. lb=-2026.70, ub = -2026.65
+(SE1)+SE1 done. lb=-2007.59, ub = -2007.29
+(SE1)*SE1 done. lb=-2022.40, ub = -2021.93
+(SE1)+SE2 done. lb=-520.21, ub = -420.52
+(SE1)*SE2 done. lb=-620.68, ub = -584.93
+(SE1)+SE3 done. lb=-1729.91, ub = -1729.40
+(SE1)*SE3 done. lb=-1610.64, ub = -1597.12
+(SE1)+SE4 done. lb=-1097.92, ub = -1097.72
+(SE1)*SE4 done. lb=-927.38, ub = -920.39
+depth 2 done
+((SE1)+SE2)+LIN1 done. lb=-497.62, ub = -411.52
+((SE1)+SE2)*LIN1 done. lb=-1215.95, ub = -1139.58
+((SE1)+SE2)+LIN2 done. lb=-261.52, ub = 831.66
+((SE1)+SE2)*LIN2 done. lb=-2880.00, ub = -2789.98
+((SE1)+SE2)+LIN3 done. lb=-420.41, ub = -337.31
+((SE1)+SE2)*LIN3 done. lb=-10726.66, ub = -10215.15
+((SE1)+SE2)+LIN4 done. lb=-13.93, ub = 117.99
+((SE1)+SE2)*LIN4 done. lb=-11412.82, ub = -11377.88
+((SE1)+SE2)+PER1 done. lb=-595.47, ub = -446.16
+((SE1)+SE2)*PER1 done. lb=-732.96, ub = -724.99
+((SE1)+SE2)+PER2 done. lb=-481.71, ub = -347.43
+((SE1)+SE2)*PER2 done. lb=-574.42, ub = -345.91
+((SE1)+SE2)+PER3 done. lb=-598.53, ub = -449.10
+((SE1)+SE2)*PER3 done. lb=-717.35, ub = -716.62
+((SE1)+SE2)+PER4 done. lb=-596.05, ub = -445.86
+((SE1)+SE2)*PER4 done. lb=-673.81, ub = -617.16
+((SE1)+SE2)+SE1 done. lb=-503.86, ub = -381.50
+((SE1)+SE2)*SE1 done. lb=-365.20, ub = -191.60
+((SE1)+SE2)+SE2 done. lb=-118.84, ub = 854.47
+((SE1)+SE2)*SE2 done. lb=-73.08, ub = 909.65
+((SE1)+SE2)+SE3 done. lb=-246.63, ub = -104.53
+((SE1)+SE2)*SE3 done. lb=59.85, ub = 301.17
+((SE1)+SE2)+SE4 done. lb=33.60, ub = 155.02
+((SE1)+SE2)*SE4 done. lb=37.99, ub = 226.07
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 78383.624019 seconds.
+
+>> tic; skd_experiment; toc; %pp m_values=[80,160,320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN1 done. lb=-2625.76, ub = -2625.76
+LIN2 done. lb=-6832.31, ub = -6832.31
+LIN3 done. lb=-12092.14, ub = -12092.14
+LIN4 done. lb=-12800.88, ub = -12800.88
+PER1 done. lb=-7509.96, ub = -7509.96
+PER2 done. lb=-5798.57, ub = -5723.18
+PER3 done. lb=-13592.08, ub = -13592.08
+PER4 done. lb=-13596.44, ub = -13596.44
+SE1 done. lb=-2001.90, ub = -2001.85
+SE2 done. lb=-5827.60, ub = -5748.71
+SE3 done. lb=-11883.29, ub = -11881.81
+SE4 done. lb=-12808.83, ub = -12808.72
+depth 1 done
+Initial function value is NaN, so optim stopped
+Initial function value is NaN, so optim stopped
+(SE1)+LIN1 done. lb=-1994.96, ub = -1994.94
+(SE1)*LIN1 done. lb=-2025.99, ub = -2025.98
+(SE1)+LIN2 done. lb=-993.35, ub = -993.27
+(SE1)*LIN2 done. lb=-4580.93, ub = -4580.87
+(SE1)+LIN3 done. lb=-1915.47, ub = -1915.45
+(SE1)*LIN3 done. lb=-11501.83, ub = -11501.82
+(SE1)+LIN4 done. lb=-1089.72, ub = -1089.70
+(SE1)*LIN4 done. lb=-11513.64, ub = -11513.52
+(SE1)+PER1 done. lb=-2021.74, ub = -2021.71
+(SE1)*PER1 done. lb=-2013.78, ub = -2013.78
+(SE1)+PER2 done. lb=-1923.32, ub = -1923.31
+(SE1)*PER2 done. lb=-1814.69, ub = -1808.83
+(SE1)+PER3 done. lb=-2019.39, ub = -2019.39
+(SE1)*PER3 done. lb=-2013.74, ub = -2013.74
+(SE1)+PER4 done. lb=-2023.50, ub = -2023.50
+(SE1)*PER4 done. lb=-2026.63, ub = -2026.63
+(SE1)+SE1 done. lb=-2007.65, ub = -2007.54
+(SE1)*SE1 done. lb=-2022.37, ub = -2021.44
+(SE1)+SE2 done. lb=-520.14, ub = -420.33
+(SE1)*SE2 done. lb=-615.37, ub = -597.63
+(SE1)+SE3 done. lb=-1729.90, ub = -1729.54
+(SE1)*SE3 done. lb=-1610.64, ub = -1597.12
+(SE1)+SE4 done. lb=-1097.92, ub = -1097.72
+(SE1)*SE4 done. lb=-927.36, ub = -924.82
+depth 2 done
+((SE1)+SE2)+LIN1 done. lb=-493.34, ub = -374.65
+((SE1)+SE2)*LIN1 done. lb=-1215.95, ub = -1139.58
+((SE1)+SE2)+LIN2 done. lb=-261.52, ub = 831.66
+((SE1)+SE2)*LIN2 done. lb=-2880.00, ub = -2789.98
+((SE1)+SE2)+LIN3 done. lb=-420.41, ub = -337.31
+((SE1)+SE2)*LIN3 done. lb=-10726.66, ub = -10215.15
+((SE1)+SE2)+LIN4 done. lb=-13.93, ub = 117.99
+((SE1)+SE2)*LIN4 done. lb=-11412.81, ub = -11377.88
+((SE1)+SE2)+PER1 done. lb=-595.40, ub = -445.99
+((SE1)+SE2)*PER1 done. lb=-721.05, ub = -720.65
+((SE1)+SE2)+PER2 done. lb=-481.68, ub = -347.25
+((SE1)+SE2)*PER2 done. lb=-324.70, ub = 146.75
+((SE1)+SE2)+PER3 done. lb=-598.46, ub = -448.92
+((SE1)+SE2)*PER3 done. lb=-728.48, ub = -720.20
+((SE1)+SE2)+PER4 done. lb=-595.98, ub = -445.68
+((SE1)+SE2)*PER4 done. lb=-673.81, ub = -617.16
+((SE1)+SE2)+SE1 done. lb=-503.91, ub = -381.47
+((SE1)+SE2)*SE1 done. lb=-365.20, ub = -191.60
+((SE1)+SE2)+SE2 done. lb=-118.84, ub = 854.47
+((SE1)+SE2)*SE2 done. lb=-73.08, ub = 909.65
+((SE1)+SE2)+SE3 done. lb=-238.08, ub = -99.35
+((SE1)+SE2)*SE3 done. lb=59.85, ub = 301.17
+((SE1)+SE2)+SE4 done. lb=33.60, ub = 155.02
+((SE1)+SE2)*SE4 done. lb=37.99, ub = 226.10
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 114099.821032 seconds.
+
+>> tic; skd_experiment; toc; %pp m_values=[10,...,320]
+Starting parallel pool (parpool) using the 'local' profile ... connected to 10 workers.
+LIN1 done. lb=-2625.76, ub = -2625.76
+LIN2 done. lb=-6832.31, ub = -6832.31
+LIN3 done. lb=-12092.14, ub = -12092.14
+LIN4 done. lb=-12800.88, ub = -12800.88
+PER1 done. lb=-7509.96, ub = -7509.96
+PER2 done. lb=-5798.57, ub = -5723.18
+PER3 done. lb=-13592.08, ub = -13592.08
+PER4 done. lb=-13596.44, ub = -13596.44
+SE1 done. lb=-2001.90, ub = -2001.85
+SE2 done. lb=-5752.27, ub = -5715.18
+SE3 done. lb=-11885.19, ub = -11881.71
+SE4 done. lb=-12808.83, ub = -12808.72
+depth 1 done
+Initial function value is NaN, so optim stopped
+Initial function value is NaN, so optim stopped
+(SE1)+LIN1 done. lb=-1994.96, ub = -1994.94
+(SE1)*LIN1 done. lb=-2025.99, ub = -2025.98
+(SE1)+LIN2 done. lb=-993.35, ub = -993.27
+(SE1)*LIN2 done. lb=-4580.93, ub = -4580.87
+(SE1)+LIN3 done. lb=-1915.47, ub = -1915.45
+(SE1)*LIN3 done. lb=-11501.82, ub = -11501.81
+(SE1)+LIN4 done. lb=-1089.72, ub = -1089.70
+(SE1)*LIN4 done. lb=-11513.64, ub = -11513.52
+(SE1)+PER1 done. lb=-2019.41, ub = -2019.41
+(SE1)*PER1 done. lb=-2013.12, ub = -2013.12
+(SE1)+PER2 done. lb=-1923.31, ub = -1923.31
+(SE1)*PER2 done. lb=-1814.69, ub = -1808.83
+(SE1)+PER3 done. lb=-2020.27, ub = -2020.26
+(SE1)*PER3 done. lb=-2013.74, ub = -2013.74
+(SE1)+PER4 done. lb=-2010.84, ub = -2010.84
+(SE1)*PER4 done. lb=-2015.61, ub = -2015.61
+(SE1)+SE1 done. lb=-2007.65, ub = -2007.54
+(SE1)*SE1 done. lb=-2022.37, ub = -2021.44
+(SE1)+SE2 done. lb=-520.14, ub = -420.33
+(SE1)*SE2 done. lb=-607.98, ub = -586.42
+(SE1)+SE3 done. lb=-1729.90, ub = -1729.54
+(SE1)*SE3 done. lb=-1610.64, ub = -1597.12
+(SE1)+SE4 done. lb=-1097.92, ub = -1097.72
+(SE1)*SE4 done. lb=-927.36, ub = -924.82
+depth 2 done
+((SE1)+SE2)+LIN1 done. lb=-493.34, ub = -374.65
+((SE1)+SE2)*LIN1 done. lb=-1212.10, ub = -1128.00
+((SE1)+SE2)+LIN2 done. lb=-261.52, ub = 831.66
+((SE1)+SE2)*LIN2 done. lb=-2880.00, ub = -2789.98
+((SE1)+SE2)+LIN3 done. lb=-420.41, ub = -337.31
+((SE1)+SE2)*LIN3 done. lb=-10726.66, ub = -10215.15
+((SE1)+SE2)+LIN4 done. lb=14.69, ub = 147.25
+((SE1)+SE2)*LIN4 done. lb=-11412.81, ub = -11377.88
+((SE1)+SE2)+PER1 done. lb=-595.40, ub = -445.99
+((SE1)+SE2)*PER1 done. lb=-722.88, ub = -721.59
+((SE1)+SE2)+PER2 done. lb=-481.68, ub = -347.25
+((SE1)+SE2)*PER2 done. lb=-190.36, ub = 60.85
+((SE1)+SE2)+PER3 done. lb=-462.68, ub = -462.26
+((SE1)+SE2)*PER3 done. lb=-510.59, ub = -365.39
+((SE1)+SE2)+PER4 done. lb=-595.98, ub = -445.68
+((SE1)+SE2)*PER4 done. lb=-673.81, ub = -617.16
+((SE1)+SE2)+SE1 done. lb=-503.91, ub = -381.47
+((SE1)+SE2)*SE1 done. lb=-365.20, ub = -191.60
+((SE1)+SE2)+SE2 done. lb=-118.84, ub = 854.47
+((SE1)+SE2)*SE2 done. lb=-73.08, ub = 909.65
+((SE1)+SE2)+SE3 done. lb=-238.08, ub = -99.35
+((SE1)+SE2)*SE3 done. lb=59.85, ub = 301.17
+((SE1)+SE2)+SE4 done. lb=33.60, ub = 155.02
+((SE1)+SE2)*SE4 done. lb=37.99, ub = 226.10
+depth 3 done
+Parallel pool using the 'local' profile is shutting down.
+Elapsed time is 127225.329651 seconds.
+
