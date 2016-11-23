@@ -1,24 +1,20 @@
-function plot_skd(kernel_buffer_history,kernel_top,m,S)
+function plot_cks(kernel_buffer_history,kernel_top)
     nk = length(kernel_buffer_history); % number of kernels in buffer_history
     Y=nk:-1:1;
-    Y=[Y;Y];
-    X = zeros(2,nk);
+    X = zeros(nk,1);
     keys = cell(nk,1);
     for kernel_ind = 1:nk
         kernel = kernel_buffer_history(kernel_ind);
-        X(1,kernel_ind) = kernel.lb;
-        X(2,kernel_ind) = kernel.ub;
+        X(kernel_ind) = kernel.bic;
         keys{nk-kernel_ind+1} = kernel.key;
     end
-    plot(X,Y,'LineWidth',3);
+    figure();
+    scatter(X,Y,'bx');
     xlabel('BIC')
     ylim([0.5,nk+0.5])
-    hold on
-    scatter(X(:),Y(:),20,'bx')
-    hold off
     set(gca,'YTick',1:nk);
     set(gca,'YTickLabel',keys);
-    title_str = ['m = ' num2str(m) ', S = ' num2str(S) ', top = ' kernel_top.key];
+    title_str = ['top = ' kernel_top.key];
     title(title_str);
     grid on
     grid minor

@@ -1,4 +1,4 @@
-function [kernel_buffer, kernel_top, kernel_top_history] = cks(x,y,final_depth,num_iter,seed,S)
+function [kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = cks_parallel(x,y,final_depth,num_iter,seed,S)
 % function to carry out compositional kernel search on inputs x, outputs y
 % up to depth = final_depth
 % with num_iter rand inits for each kernel
@@ -31,19 +31,24 @@ rng(seed);
 
 for depth = 1:final_depth
     if depth == 1
-        for key_ind = 1:length(base_kernels.keys)
-            keys = base_kernels.keys; key = keys{key_ind}; % name of kernel
+        keys = base_kernels.keys;
+        lk = length(keys);
+        full_bic_table = zeros(num_iter*lk,1);
+        full_gp_cell = cell(num_iter*lk,1);
+        parfor kernel_ind = 1:(num_iter*lk)
+            key_ind = floor((kernel_ind-1)/num_iter)+1; % kernel_ind: 1-num_iter -> key_ind: 1 and so on
+            key = keys{key_ind}; % name of kernel
             val = base_kernels(key); % gpcf in base kernel
-            bic_table = zeros(num_iter,1); % stores bic for all iter
-            gp_cell = cell(num_iter,1); % stores gp for all iter
-            parfor iter = 1:num_iter % change to parfor for parallel
-                rng(iter);
-                %%% optim for gp
-                [gpcf, lik] = reinitialise_kernel(val,x,y);
-                [bic_table(iter),gp_cell{iter}] = gpfunction(x,y,gpcf,lik);
-            end
-            [bic,ind] = max(bic_table);
-            gp = gp_cell{ind};
+            %%% optim for gp
+            rng(kernel_ind);
+            [gpcf, lik] = reinitialise_kernel(val,x,y);
+            [full_bic_table(kernel_ind),full_gp_cell{kernel_ind}] = gpfunction(x,y,gpcf,lik);
+        end
+        
+        for key_ind = 1:lk
+            key = keys{key_ind}; % name of kernel
+            [bic,ind] = max(full_bic_table(((key_ind-1)*num_iter+1):(key_ind*num_iter)));
+            gp = full_gp_cell{(key_ind-1)*num_iter+ind};
             kernel = struct('key',key,'bic',bic,'gp',gp);
             
             %%% compare kernel with previous kernels
@@ -70,61 +75,66 @@ for depth = 1:final_depth
         if isempty(kernel_new) % no new kernels found in search
             return
         else
-        kernel_buffer_old = kernel_buffer; % need for comparing with kernel_buffer after search at current depth
-        for parent_ind = 1:length(kernel_new)
-            key = kernel_new(parent_ind).key;
-            val = kernel_new(parent_ind).gp.cf{1};
-            lik = kernel_new(parent_ind).gp.lik;
-            for base_key_ind = 1:length(base_kernels.keys)
+            kernel_buffer_old = kernel_buffer; % need for comparing with kernel_buffer after search at current depth
+            lkn = length(kernel_new); lbk = length(base_kernels.keys);
+            lk = lkn*lbk*2;
+            full_bic_table = zeros(num_iter*lk,1);
+            full_gp_cell = cell(num_iter*lk,1);
+            full_key_cell = cell(num_iter*lk,1);
+            parfor kernel_ind = 1:(num_iter*lk)
+                parent_ind = floor((kernel_ind-1)/(num_iter*lbk*2))+1; % kernel_ind: 1-num_iter*lbk*2 -> parent_ind: 1 and so on
+                key = kernel_new(parent_ind).key;
+                val = kernel_new(parent_ind).gp.cf{1};
+                lik = kernel_new(parent_ind).gp.lik;
+                base_key_ind = floor((kernel_ind-(parent_ind-1)*lbk*num_iter*2-1)/(num_iter*2))+1;
                 base_keys = base_kernels.keys; key_base = base_keys{base_key_ind};
                 val_base = base_kernels(key_base);
-                for comp = 0:1 % select kernel
-                    if comp ==0 % kernel in previous depth + base kernel
-                        key_new = ['(' key ')+' key_base];
-                    else % kernel in previous depth * base kernel
-                        key_new = ['(' key ')*' key_base];
-                    end
-                    bic_table = zeros(num_iter,1); % stores bic for all iter
-                    gp_cell = cell(num_iter,1); % stores lb gp_var for all iter
-                    parfor iter = 1:num_iter % change to parfor for parallel
-                        rng(iter);
-                        [val_base_new,~] = reinitialise_kernel(val_base,x,y);
-                        if comp==0 % kernel in previous depth + base kernel
-                            gpcf_new = gpcf_sum('cf',{val,val_base_new});
-                        else % kernel in previous depth * base kernel
-                            gpcf_new = gpcf_prod('cf',{val,val_base_new});
-                        end
-                        %%% optim for gp
-                        if mod(iter,2) == 0 % half: get optimal hyp from previous depth kernels and use new hyps for current depth kernel 
-                            [bic_table(iter),gp_cell{iter}] = gpfunction(x,y,gpcf_new,lik);
-                        else % other half: use random init of hyps
-                            [gpcf_new, lik_new] = reinitialise_kernel(gpcf_new,x,y);
-                            [bic_table(iter),gp_cell{iter}] = gpfunction(x,y,gpcf_new,lik_new);
-                        end
-                    end
-                    [bic,ind] = max(bic_table);
-                    gp = gp_cell{ind};
-                    kernel = struct('key',key_new,'bic',bic,'gp',gp);
-                    
-                    %%% compare kernel with previous kernels
-                    n_buffer = length(kernel_buffer);
-                    if bic > kernel_top.bic
-                        kernel_top = kernel;
-                    end
-                    if n_buffer < S % buffer not full
-                        kernel_buffer(n_buffer+1) = kernel;
-                    else
-                        [buffer_min_val, buffer_min_ind] = findmin(kernel_buffer);
-                        if bic > buffer_min_val % if kernel has higher bic than some kernel in buffer
-                            kernel_buffer(buffer_min_ind) = kernel; % replace that kernel
-                        end
-                    end
-                    fprintf([key_new ' done. bic=%4.2f \n'],bic);
+                comp = floor((kernel_ind-(parent_ind-1)*lbk*num_iter*2-(base_key_ind-1)*num_iter*2-1)/num_iter)+1;
+                if comp == 1 % kernel in previous depth + base kernel
+                    key_new = ['(' key ')+' key_base];
+                else % comp =2. kernel in previous depth * base kernel
+                    key_new = ['(' key ')*' key_base];
                 end
+                full_key_cell{kernel_ind} = key_new;
+                %%% optim for gp
+                rng(kernel_ind);
+                [val_base_new,~] = reinitialise_kernel(val_base,x,y);
+                if comp==1 % kernel in previous depth + base kernel
+                    gpcf_new = gpcf_sum('cf',{val,val_base_new});
+                else % kernel in previous depth * base kernel
+                    gpcf_new = gpcf_prod('cf',{val,val_base_new});
+                end
+                if mod(kernel_ind,2) == 0 % half: get optimal hyp from previous depth kernels and use new hyps for current depth kernel
+                    [full_bic_table(kernel_ind),full_gp_cell{kernel_ind}] = gpfunction(x,y,gpcf_new,lik);
+                else % other half: use random init of hyps
+                    [gpcf_new, lik_new] = reinitialise_kernel(gpcf_new,x,y);
+                    [full_bic_table(kernel_ind),full_gp_cell{kernel_ind}] = gpfunction(x,y,gpcf_new,lik_new);
+                end
+            end
+            
+            for key_ind = 1:lk
+                key = full_key_cell{(key_ind-1)*num_iter+1};
+                [bic,ind] = max(full_bic_table(((key_ind-1)*num_iter+1):(key_ind*num_iter)));
+                gp = full_gp_cell{(key_ind-1)*num_iter+ind};
+                kernel = struct('key',key,'bic',bic,'gp',gp);
+                
+                %%% compare kernel with previous kernels
+                n_buffer = length(kernel_buffer);
+                if bic > kernel_top.bic
+                    kernel_top = kernel;
+                end
+                if n_buffer < S % buffer not full
+                    kernel_buffer(n_buffer+1) = kernel;
+                else
+                    [buffer_min_val, buffer_min_ind] = findmin(kernel_buffer);
+                    if bic > buffer_min_val % if kernel has higher bic than some kernel in buffer
+                        kernel_buffer(buffer_min_ind) = kernel; % replace that kernel
+                    end
+                end
+                fprintf([key ' done. bic=%4.2f \n'],bic);
             end
         end
         kernel_new = findnew(kernel_buffer_old,kernel_buffer);
-        end
     end
     kernel_top_history(length(kernel_top_history)+1) = kernel_top;
     kbh_length=length(kernel_buffer_history);

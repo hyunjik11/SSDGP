@@ -293,6 +293,10 @@ function [lb, gp_var] = lbfunction(x,y,xu,gpcf,lik) % get lb of bic
     if gp_var.lik.sigma2 > 1e-8
         [~,nll] = gp_e([],gp_var,x,y);
         ll = -nll;
+        if ll > 0 
+            lb =nan;
+            return
+        end
         p = length(gp_pak(gp_var)); % number of hyperparams
         lb = ll - p*log(n)/2;
     else lb = nan;
@@ -308,7 +312,11 @@ if gp_var.lik.sigma2 > 1e-8
     p = length(gp_pak(gp_var)); % number of hyperparams
     signal_var = gp_var.lik.sigma2;
     K_mn=gp_cov(gp_var,xu,x); K_mm=gp_trcov(gp_var,xu);
-    L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
+    try
+        L_mm=chol(K_mm); %L_mm'*L_mm=K_mm;
+    catch
+        L_mm=chol(K_mm+1e-8*eye(m));
+    end
     L=L_mm'\K_mn; %L'*L=K_hat=K_mn'*(K_mm\K_mn)
     K_naive=L'*L;
     A=L*L'+signal_var*eye(m);

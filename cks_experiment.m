@@ -43,37 +43,25 @@ if pp
     y = (y-y_mean)/y_std; %normalise y;
 end
 
-num_workers=30;
+num_workers=20;
 POOL=parpool('local',num_workers);
 
 final_depth=6;
 num_iter=10;
 seed=123;
-precond = 'PIC';
-%m_values = [10,20,40,80,160,320];
-if 1==1
-for m=[320]
-  for S=1:3
-        %if (m > 80) || ((m==80) && (S == 3))
-        string_txt = ['/data/greywagtail/not-backed-up/oxwasp/oxwaspor/hkim/concrete_skd_experiment_' num2str(m) 'm_' num2str(S), 'S.txt'];
-        diary(string_txt);
-        fprintf('m=%d, S=%d \n',m,S);
-        tic;
-        [kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skd_parallel(x,y,final_depth,num_iter,m,seed,S,precond);
-        toc;
-        diary off
-        string = ['/data/greywagtail/not-backed-up/oxwasp/oxwaspor/hkim/concrete_skd_experiment_' num2str(m) 'm_' num2str(S), 'S.mat'];
-        save(string,'kernel_buffer', 'kernel_buffer_history', 'kernel_top', 'kernel_top_history');
-        %end
-    end
-end
-end
+S=1;
 
-%m=20; S=2; final_depth=3;
-%[kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skd_parallel(x,y,final_depth,num_iter,m,seed,S,precond);
-%plot_skd(kernel_buffer_history,kernel_top,m,S)
-%[kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skd(x,y,final_depth,num_iter,m_values,seed,S,precond);
+string_txt = ['/data/anzu/not-backed-up/hkim/concrete_cks_experiment.txt'];
+diary(string_txt);
+tic;
+[kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = cks_parallel(x,y,final_depth,num_iter,seed,S);
+toc;
+diary off
+string = ['/data/anzu/not-backed-up/hkim/concrete_cks_experiment.mat'];
+save(string,'kernel_buffer','kernel_buffer_history', 'kernel_top', 'kernel_top_history');
+
+
 %save /data/greypartridge/not-backed-up/oxwasp/oxwaspor/hkim/concrete_kernel_tree_search_new.mat kernel_dict kernel_dict_debug
-%kernel_tree_plot(kernel_dict,m_values,[-1500,-1200],'plots/concrete_tree/');
+
 
 delete(POOL)
