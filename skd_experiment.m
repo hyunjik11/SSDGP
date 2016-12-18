@@ -1,8 +1,8 @@
 addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
 solar = 0;
-concrete = 1;
+concrete = 0;
 mauna = 0;
-pp=0;
+pp=1;
 
 if solar
     load solar.mat
@@ -43,7 +43,7 @@ if pp
     y = (y-y_mean)/y_std; %normalise y;
 end
 
-num_workers=30;
+num_workers=20;
 POOL=parpool('local',num_workers);
 
 final_depth=6;
@@ -52,25 +52,25 @@ seed=123;
 precond = 'PIC';
 %m_values = [10,20,40,80,160,320];
 if 1==1
-for m=[320]
-  for S=1:3
+for m=[80]
+    for S=[3]
         %if (m > 80) || ((m==80) && (S == 3))
-        string_txt = ['/data/greywagtail/not-backed-up/oxwasp/oxwaspor/hkim/concrete_skd_experiment_' num2str(m) 'm_' num2str(S), 'S.txt'];
+        string_txt = ['/data/siris/not-backed-up/hkim/pp_skd_experiment_' num2str(m) 'm_' num2str(S), 'S.txt'];
         diary(string_txt);
         fprintf('m=%d, S=%d \n',m,S);
         tic;
         [kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skd_parallel(x,y,final_depth,num_iter,m,seed,S,precond);
         toc;
         diary off
-        string = ['/data/greywagtail/not-backed-up/oxwasp/oxwaspor/hkim/concrete_skd_experiment_' num2str(m) 'm_' num2str(S), 'S.mat'];
+        string = ['/data/siris/not-backed-up/hkim/pp_skd_experiment_' num2str(m) 'm_' num2str(S), 'S.mat'];
         save(string,'kernel_buffer', 'kernel_buffer_history', 'kernel_top', 'kernel_top_history');
         %end
     end
 end
 end
 
-%m=20; S=2; final_depth=3;
-%[kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skd_parallel(x,y,final_depth,num_iter,m,seed,S,precond);
+m=20; S=3; final_depth=3;
+[kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skd_parallel_ub(x,y,final_depth,num_iter,m,seed,S,precond);
 %plot_skd(kernel_buffer_history,kernel_top,m,S)
 %[kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skd(x,y,final_depth,num_iter,m_values,seed,S,precond);
 %save /data/greypartridge/not-backed-up/oxwasp/oxwaspor/hkim/concrete_kernel_tree_search_new.mat kernel_dict kernel_dict_debug

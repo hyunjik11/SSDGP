@@ -9,6 +9,9 @@ function plot_skd(kernel_buffer_history,kernel_top,m,S)
         X(1,kernel_ind) = kernel.lb;
         X(2,kernel_ind) = kernel.ub;
         keys{nk-kernel_ind+1} = kernel.key;
+        if strcmp(kernel.key,kernel_top.key)
+            keys{nk-kernel_ind+1} = ['-> ' kernel.key];
+        end
     end
     plot(X,Y,'LineWidth',3);
     xlabel('BIC')
@@ -22,4 +25,5 @@ function plot_skd(kernel_buffer_history,kernel_top,m,S)
     title(title_str);
     grid on
     grid minor
+    
 end

@@ -7,8 +7,10 @@ function plot_cks(kernel_buffer_history,kernel_top)
         kernel = kernel_buffer_history(kernel_ind);
         X(kernel_ind) = kernel.bic;
         keys{nk-kernel_ind+1} = kernel.key;
+        if strcmp(kernel.key,kernel_top.key)
+            keys{nk-kernel_ind+1} = ['-> ' kernel.key];
+        end
     end
-    figure();
     scatter(X,Y,'bx');
     xlabel('BIC')
     ylim([0.5,nk+0.5])
@@ -18,4 +20,5 @@ function plot_cks(kernel_buffer_history,kernel_top)
     title(title_str);
     grid on
     grid minor
+    box on
 end
