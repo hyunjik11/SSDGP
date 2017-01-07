@@ -1,7 +1,7 @@
-addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
-addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
-solar = 1;
-concrete = 0;
+addpath(genpath('/homes/hkim/SSDGP/GPstuff-4.6'));
+addpath(genpath('/Users/hyunjik11/Documents/SSDGP/GPstuff-4.6'));
+solar = 0;
+concrete = 1;
 mauna = 0;
 if solar
     load solar.mat
@@ -85,15 +85,15 @@ end
 gp_var = gp_set(gp_var, 'infer_params', 'covariance+likelihood');
 % opt=optimset('TolFun',1e-4,'TolX',1e-5,'Display','iter','MaxIter',1000);
 % gp_var=gp_optim(gp_var,x,y,'opt',opt,'optimf',@fminscg);
-w = gp_pak(gp_var);
-[val,grad]=approx_ub_grad(w,gp_var,x,y);
+w = gp_pak(gp_var); % log params
+[val,grad]=ub_grad(w,gp_var,x,y);
 for i=1:length(w)
     fprintf('diff_grad = ')
     for eps = [1e-2,1e-3,1e-4,1e-5,1e-6]
         z=w; z(i)=z(i)+eps;
-        [val_new,grad_new] = approx_ub_grad(z,gp_var,x,y);
+        [val_new,grad_new] = ub_grad(z,gp_var,x,y);
         z=w; z(i)=z(i)-eps;
-        [val_old,grad_old] = approx_ub_grad(z,gp_var,x,y);
+        [val_old,grad_old] = ub_grad(z,gp_var,x,y);
         fd = (val_new - val_old)/(2*eps);
         fprintf('%4.8f ',abs((fd-grad(i))/grad(i)))
     end

@@ -1,11 +1,6 @@
-addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
-addpath(genpath('/Users/hyunjik11/Documents/GPstuff'));
-time=0; subset=1;
-if subset
-    fprintf('Using subset of training with rand init \n')
-else
-    fprintf('Using Kmeans with rand init \n')
-end
+addpath(genpath('/homes/hkim/SSDGP/GPstuff-4.6'));
+addpath(genpath('/Users/hyunjik11/Documents/SSDGP/GPstuff-4.6'));
+time = 0;
 num_workers=10;
 POOL=parpool('local',num_workers);
 
@@ -191,9 +186,6 @@ if m==min(m_values)
     ne_full(i) = gp_e([],gp,x,y);
 end
 
-%%% Optimise gp_full %%%
-if i ==1
-    
     
 %%% Optimise gp_var %%%
 if i <= numiter/2

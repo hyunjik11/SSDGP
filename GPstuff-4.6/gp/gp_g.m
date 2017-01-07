@@ -1096,10 +1096,189 @@ switch gp.type
         end
       end
     end
+  case {'DTC' 'SOR'}
+    g_ind = zeros(1,numel(gp.X_u));
+    gdata_ind = zeros(1,numel(gp.X_u));
+    gprior_ind = zeros(1,numel(gp.X_u));
+
+    u = gp.X_u;
+    DKuu_u = 0;
+    DKuf_u = 0;
+
+    % First evaluate the needed covariance matrices
+    % v defines that parameter is a vector
+    [Kv_ff, Cv_ff] = gp_trvar(gp, x);  % 1 x f  vector
+    K_fu = gp_cov(gp, x, u);         % f x u
+    K_uu = gp_trcov(gp, u);          % u x u, noiseles covariance K_uu
+    K_uu = (K_uu+K_uu')./2;          % ensure the symmetry of K_uu
+    [Luu, notpositivedefinite] = chol(K_uu,'lower');
+    if notpositivedefinite
+      % If not positive definite, return NaN
+      g=NaN; gdata=NaN; gprior=NaN;
+      return;
+    end
+    % Evaluate the Lambda (La)
+    % Q_ff = K_fu*inv(K_uu)*K_fu'
+    % Here we need only the diag(Q_ff), which is evaluated below
+    B=Luu\(K_fu');
+    Qv_ff=sum(B.^2)';
+    Lav = Cv_ff-Kv_ff;   % 1 x f, Vector of diagonal elements
+                         % iLaKfu = diag(inv(Lav))*K_fu = inv(La)*K_fu
+    iLaKfu = zeros(size(K_fu));  % f x u,
+    for i=1:n
+      iLaKfu(i,:) = K_fu(i,:)./Lav(i);  % f x u
+    end
+    % ... then evaluate some help matrices.
+    % A = K_uu+K_uf*inv(La)*K_fu
+    A = K_uu+K_fu'*iLaKfu;
+    A = (A+A')./2;               % Ensure symmetry
+    [LA, notpositivedefinite] = chol(A);
+    if notpositivedefinite
+      % If not positive definite, return NaN
+      g=NaN; gdata=NaN; gprior=NaN;
+      return;
+    end
+    L = iLaKfu/LA;
+    b = y'./Lav' - (y'*L)*L';
+    iKuuKuf = Luu'\(Luu\K_fu');
+    La = Lav;
+    LL = sum(L.*L,2);
+    iLav=1./Lav;
+    
+    LL1=iLav-LL;
+    
+    % =================================================================
+    
+    if ~isempty(strfind(gp.infer_params, 'covariance'))
+      % Loop over the covariance functions
+      i1=0;
+      for i=1:ncf            
         
-  case {'DTC' 'VAR' 'SOR'}
+        % Get the gradients of the covariance matrices 
+        % and gprior from gpcf_* structures
+        gpcf = gp.cf{i};
+        if savememory
+          np=gpcf.fh.cfg(gpcf,[],[],[],0);
+        else
+          DKffc = gpcf.fh.cfg(gpcf, x, [], 1);
+          DKuuc = gpcf.fh.cfg(gpcf, u);
+          DKufc = gpcf.fh.cfg(gpcf, u, x);
+          np=length(DKuuc);
+        end
+        gprior_cf = -gpcf.fh.lpg(gpcf);
+        
+        for i2 = 1:np
+          i1 = i1+1;       
+          if savememory
+            % If savememory option is used, just get the number of
+            % hyperparameters and calculate gradients later
+            DKff=gpcf.fh.cfg(gpcf,x,[],1,i2);
+            DKuu=gpcf.fh.cfg(gpcf,u,[],[],i2);
+            DKuf=gpcf.fh.cfg(gpcf,u,x,[],i2);
+          else
+            DKff=DKffc{i2};
+            DKuu=DKuuc{i2};
+            DKuf=DKufc{i2};
+          end
+          
+          KfuiKuuKuu = iKuuKuf'*DKuu;
+          gdata(i1) = -0.5.*((2*b*DKuf'-(b*KfuiKuuKuu))*(iKuuKuf*b'));
+          gdata(i1) = gdata(i1) + 0.5.*(2.*(sum(iLav'*sum(DKuf'.*iKuuKuf',2))-sum(sum(L'.*(L'*DKuf'*iKuuKuf))))...
+                                        - sum(iLav'*sum(KfuiKuuKuu.*iKuuKuf',2))+ sum(sum(L'.*((L'*KfuiKuuKuu)*iKuuKuf))));
+          
+          if strcmp(gp.type, 'VAR')
+            gdata(i1) = gdata(i1) + 0.5.*(sum(iLav.*DKff)-2.*sum(iLav'*sum(DKuf'.*iKuuKuf',2)) + ...
+                                          sum(iLav'*sum(KfuiKuuKuu.*iKuuKuf',2))); % trace-term derivative
+          end
+        end        
+        gprior = [gprior gprior_cf];
+      end
+    end      
+    
+    % =================================================================
+    % Gradient with respect to Gaussian likelihood function parameters
+    if ~isempty(strfind(gp.infer_params, 'likelihood')) && isfield(gp.lik.fh,'trcov')
+      % Evaluate the gradient from Gaussian likelihood
+      DCff = gp.lik.fh.cfg(gp.lik, x);
+      gprior_lik = -gp.lik.fh.lpg(gp.lik);
+      for i2 = 1:length(DCff)
+        i1 = i1+1;
+        gdata(i1)= -0.5*DCff{i2}.*b*b';
+        gdata(i1)= gdata(i1) + 0.5*sum(DCff{i2}./La-sum(L.*L,2).*DCff{i2});
+        if strcmp(gp.type, 'VAR')
+          gdata(i1)= gdata(i1) - 0.5*(sum((Kv_ff-Qv_ff)./La));
+        end
+      end
+      gprior = [gprior gprior_lik];              
+    end        
+    
+    % =================================================================
+    % Gradient with respect to inducing inputs
+    if ~isempty(strfind(gp.infer_params, 'inducing'))
+      if isfield(gp.p, 'X_u') && ~isempty(gp.p.X_u)
+        m = size(gp.X_u,1);
+        st=0;
+        if ~isempty(gdata)
+          st = length(gdata);
+        end
+        
+        gdata(st+1:st+length(gp.X_u(:))) = 0;
+        i1 = st+1;
+        gprior_ind=[];
+        if iscell(gp.p.X_u) % Own prior for each inducing input
+          for i = 1:size(gp.X_u,1)            
+            pr = gp.p.X_u{i};
+            gprior_ind =[gprior_ind -pr.fh.lpg(gp.X_u(i,:), pr)];
+          end
+        else % One prior for all inducing inputs
+          gprior_ind = -gp.p.X_u.fh.lpg(gp.X_u(:)', gp.p.X_u);
+        end
+        gprior = [gprior gprior_ind];
+        i1 = i1 + m;
+        % Loop over the covariance functions
+        for i=1:ncf
+          i1 = st;
+          gpcf = gp.cf{i};
+          if savememory
+            % If savememory option is used, just get the number of
+            % covariates in X and calculate gradients later
+            np=gpcf.fh.ginput(gpcf,u,[],0);
+          else
+            np=1;
+            DKuu = gpcf.fh.ginput(gpcf, u);
+            DKuf = gpcf.fh.ginput(gpcf, u, x);
+          end
+          
+          for i3 = 1:np
+            if savememory
+              DKuu=gpcf.fh.ginput(gpcf,u,[],i3);
+              DKuf=gpcf.fh.ginput(gpcf,u,x,i3);
+            end
+            for i2 = 1:length(DKuu)
+              if savememory
+                i1 = st + (i2-1)*np+i3;
+                %i1 = st + 2*i2 - (i3==1);
+              else
+                i1 = i1+1;
+              end
+              KfuiKuuKuu = iKuuKuf'*DKuu{i2};
+              gdata(i1) = gdata(i1) - 0.5.*((2*b*DKuf{i2}'-(b*KfuiKuuKuu))*(iKuuKuf*b'));
+              gdata(i1) = gdata(i1) + 0.5.*(2.*(sum(iLav'*sum(DKuf{i2}'.*iKuuKuf',2))-sum(sum(L'.*(L'*DKuf{i2}'*iKuuKuf))))...
+                                          - sum(iLav'*sum(KfuiKuuKuu.*iKuuKuf',2))+ sum(sum(L'.*((L'*KfuiKuuKuu)*iKuuKuf))));
+            
+              if strcmp(gp.type, 'VAR')
+                gdata(i1) = gdata(i1) + 0.5.*(0-2.*sum(iLav'*sum(DKuf{i2}'.*iKuuKuf',2)) + ...
+                                            sum(iLav'*sum(KfuiKuuKuu.*iKuuKuf',2)));
+              end
+            end
+          end
+        end
+      end
+    end
+  
+  case {'VAR'}
     % ============================================================
-    % DTC/VAR/SOR
+    % VAR
     % ============================================================
     g_ind = zeros(1,numel(gp.X_u));
     gdata_ind = zeros(1,numel(gp.X_u));
