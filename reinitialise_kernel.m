@@ -9,7 +9,7 @@ function [gpcf, lik] = reinitialise_kernel(gpcf, x, y)
             switch gpcf.type
                 case 'gpcf_sexp'
                     gpcf = se_init(x,y,dim);
-                case 'gpcf_linear'
+                case 'gpcf_linear_loc'
                     gpcf = lin_init(dim);
                 case 'gpcf_periodic'
                     gpcf = per_init(x,y,dim);
@@ -20,7 +20,7 @@ function [gpcf, lik] = reinitialise_kernel(gpcf, x, y)
             switch gpcf.type
                 case 'gpcf_sexp'
                     gpcf = se_init(x,y);
-                case 'gpcf_linear'
+                case 'gpcf_linear_loc'
                     gpcf = lin_init();
                 case 'gpcf_periodic'
                     gpcf = per_init(x,y);

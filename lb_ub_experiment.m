@@ -1,15 +1,15 @@
 addpath(genpath('/homes/hkim/SSDGP/GPstuff-4.6'));
 addpath(genpath('/Users/hyunjik11/Documents/SSDGP/GPstuff-4.6'));
 
-num_workers=4;
+num_workers=10;
 %POOL=parpool('local',num_workers);
 
 warning('off','all');
-solar = 0;
+solar = 1;
 concrete = 0;
-mauna = 1;
+mauna = 0;
 
-num_iter=4;
+num_iter=10;
 m_values=[10,20,40,80,160,320];
 
 %%%% Initialise data %%%%

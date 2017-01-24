@@ -18,10 +18,12 @@
 % ylim([650,1150]);
 % subplot(1,3,3);
 % ylim([-520,-400]);
-addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
+addpath(genpath('/homes/hkim/SSDGP/GPstuff-4.6'));
+addpath(genpath('/Users/hyunjik11/Documents/SSDGP/GPstuff-4.6'));
 solar = 0;
-concrete = 1;
+concrete = 0;
 mauna = 0;
+pp = 1;
 
 subset = 1;
 m_values=[10,20,40,80,160,320];
@@ -60,8 +62,43 @@ if mauna
     [n,D]=size(x);
 end
 
-num_workers=20;
-%POOL=parpool('local',num_workers);
+if pp
+    load pp.mat
+    [n,D]=size(x);
+    x_mean=mean(x); x_std=std(x);
+    y_mean=mean(y); y_std=std(y);
+    x = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
+    y = (y-y_mean)/y_std; %normalise y;
+end
+
+if 1 == 0
+num_workers=10;
+num_iter = 10;
+POOL=parpool('local',num_workers);
+%m=80;
+bic_table = zeros(num_iter,1);
+gp_cell = cell(num_iter,1);
+tic;
+parfor i=1:num_iter
+rng(i)
+lik = lik_init(y);
+gpcf_se1=se_init(x,y,1);
+gpcf_se2=se_init(x,y,2);
+gpcf_se3=se_init(x,y,3);
+gpcf_se4=se_init(x,y,4);
+gpcf=gpcf_prod('cf',{gpcf_se1,gpcf_se2,gpcf_se3,gpcf_se4});
+%xu = datasample(x,m,1,'Replace',false);
+[bic, gp] = gpfunction(x,y,gpcf,lik);
+bic_table(i) = bic;
+fprintf('iter %d : lb=%4.3f',i,bic);
+gp_cell{i} = gp;
+end
+time = toc;
+fprintf('time taken = %d',time);
+save('/data/siris/not-backed-up/hkim/pp_ard.mat',bic_table,gp_cell,time);
+delete(POOL);
+
+
 for dim = 1:D
     fprintf('dim=%d \n',dim);
 for m=m_values
@@ -86,8 +123,8 @@ end
 if concrete
     %gpcf_wn=gpcf_prod('cf',{gpcf_constant(),gpcf_cat()});
     lik = lik_init(y);
-    gpcf_lin=lin_init(dim);
-    fprintf('lin_sigma2 = %4.3f, signal_var = %4.3f \n',gpcf_lin.coeffSigma2,lik.sigma2)
+    gpcf_lin4=lin_init(dim);
+    fprintf('lin_sigma2 = %4.3f, signal_var = %4.3f \n',gpcf_lin4.coeffSigma2,lik.sigma2)
     gpcf_se1=se_init(x(:,1),y,1);
     gpcf_se2=se_init(x(:,2),y,2);
     gpcf_se4=se_init(x(:,4),y,4);
@@ -122,6 +159,7 @@ if mauna
     end
     gp_var = gp_set('type', 'VAR', 'lik', lik, 'cf',{gpcf1,gpcf2,gpcf3},'X_u', X_u); 
 end
+
 % gp_fic = gp_set('type', 'FIC', 'lik', lik, 'cf',gpcf,'X_u', X_u);
 % num_blocks=ceil(n/m);
 % myind=cell(1,num_blocks);
@@ -176,9 +214,32 @@ end
 ind = ind + 1;
 end
 end
+
 %ub = -temp;
 %fprintf('lb = %4.3f, ub=%4.3f \n',lb,ub);
 
+data = xlsread('/homes/hkim/Downloads/load.xlsx','zeros_copy');
+new_data = data((data(:,2)~= 0),:);
+times = new_data(:,1);
+loads = new_data(:,2:end);
+
+for i=1:20
+    figure('units','normalized','outerposition',[0 0 1 1])
+    plot(times,loads(:,i));
+    str = ['Zone' i];
+    title(str);
+end
+end
+
+%load('/data/greyheron/not-backed-up/oxwasp/oxwaspor/hkim/pp_skc_experiment_640m_1S.mat')
+gp_var = kernel_top.gp_var;
+lik = gp_var.lik;
+gpcf = gp_var.cf{1};
+gp=gp_set('lik',lik,'cf',gpcf);
+p = length(gp_pak(gp)); % p is number of hyperparams
+[n,~] = size(x); % n is n_data
+[~, nll] = gp_e([],gp,x,y);
+bic = -nll - p*log(n)/2
 
 
 

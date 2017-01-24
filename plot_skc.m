@@ -1,4 +1,4 @@
-function plot_skd(kernel_buffer_history,kernel_top,m,S)
+function plot_skc(kernel_buffer_history,kernel_top,m,S)
     nk = length(kernel_buffer_history); % number of kernels in buffer_history
     Y=nk:-1:1;
     Y=[Y;Y];
