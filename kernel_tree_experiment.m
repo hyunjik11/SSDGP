@@ -1,4 +1,4 @@
-addpath(genpath('/homes/hkim/Documents/GPstuff-4.6'));
+addpath(genpath('/homes/hkim/SSDGP/GPstuff-4.6'))
 solar = 0;
 concrete = 1;
 mauna = 0;
@@ -44,7 +44,8 @@ fullgp=1;
 m_values = [10,20,40,80,160,320];
 
 [kernel_dict, kernel_dict_debug] = kernel_tree(x,y,final_depth,num_iter,m_values,seed,fullgp,'PIC');
-%save /data/greypartridge/not-backed-up/oxwasp/oxwaspor/hkim/concrete_kernel_tree_search_new.mat kernel_dict kernel_dict_debug
-%kernel_tree_plot(kernel_dict,m_values,[-1500,-1200],'plots/concrete_tree/');
-
+%save /data/anzu/not-backed-up/hkim/concrete_kernel_tree_search_new.mat kernel_dict kernel_dict_debug
+kernel_tree_plot(kernel_dict,m_values,[-1500,-1200],'plots/concrete_tree/');
+kernel_tree_plot(kernel_dict,m_values,[0,2000],'plots/mauna_tree/');
+kernel_tree_plot(kernel_dict,m_values,[-500,-100],'plots/solar_tree/');
 delete(POOL)

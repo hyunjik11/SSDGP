@@ -20,7 +20,7 @@ function gpcf = gpcf_linear_loc(varargin)
 %      loc               - prior location shift in regressor coefficients [0]
 %                          This is a scalar
 %      coeffSigma2_prior - prior structure for coeffSigma2 [prior_logunif]
-%      loc_prior         - prior structure for log [prior_logunif]
+%      loc_prior         - prior structure for log [prior logunif]
 %      selectedVariables - vector defining which inputs are used [all]
 %
 %    Note! If the prior is 'prior_fixed' then the parameter in

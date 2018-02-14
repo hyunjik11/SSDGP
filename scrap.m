@@ -241,6 +241,164 @@ p = length(gp_pak(gp)); % p is number of hyperparams
 [~, nll] = gp_e([],gp,x,y);
 bic = -nll - p*log(n)/2
 
+addpath(genpath(pwd));
+range=[-2000,2500];
+figure();
+load('/data/greyheron/not-backed-up/oxwasp/oxwaspor/hkim/pp_skc_experiment_160m_2S.mat')
+subplot(1,3,1);
+plot_skc(kernel_buffer_history,kernel_top,160,2);
+xlim(range);
+load('/data/greyheron/not-backed-up/oxwasp/oxwaspor/hkim/pp_skc_experiment_320m_2S.mat')
+subplot(1,3,2);
+plot_skc(kernel_buffer_history,kernel_top,320,2)
+xlim(range);
+load('/data/greyheron/not-backed-up/oxwasp/oxwaspor/hkim/pp_skc_experiment_640m_1S.mat');
+subplot(1,3,3);
+plot_skc(kernel_buffer_history,kernel_top,640,2)
+xlim(range);
 
+%% import santa barbara hourly temperature data
+fid=fopen('/homes/hkim/Downloads/temp_CA_Santa_Barbara_short.txt','r');
+data = textscan(fid, '%d %s %s %d %d %f %f %f %f %f %f %f %*[^\n]','Delimiter',' ','MultipleDelimsAsOne',1);
+fclose(fid);
+idx = ((data{10} > -100) & (data{11} > -100) & (data{12} > -100));
+temp_avg = data{10}(idx);
+temp_max = data{11}(idx);
+temp_min = data{12}(idx);
+date_str = data{2}(idx);
+time_str = data{3}(idx);
+
+%% convert date and time to double %%
+n = length(date_str);
+time_converted = zeros(n,1);
+for i = 1:n
+    str = strcat(date_str{i},time_str{i});
+    formatIn = 'yyyymmddHHMM';
+    time_converted(i) = datenum(str,formatIn);
+%    if mod(i,1000) == 0
+%        fprintf('%d done', i);
+%    end
+end
+
+%% import dover tidal data %%
+temp_date_str={}; temp_time_str={}; temp_elevation=[];
+for i=2012:2016 
+    filename = strcat('/homes/hkim/Downloads/tidal/',int2str(i),'DOV.txt');
+    fid = fopen(filename,'r');
+    data = textscan(fid, '%s %s %s %f %*[^\n]','Delimiter',' ','MultipleDelimsAsOne',1,'HeaderLines',11);
+    temp_date_str = [temp_date_str;data{2}];
+    temp_time_str = [temp_time_str;data{3}];
+    temp_elevation = [temp_elevation;data{4}];
+end
+
+% average over each hour
+m = length(temp_elevation)/4;
+date_str=cell(m,1);
+time_str=cell(m,1);
+elevation = zeros(m,1);
+for i = 1:m;
+    date_str{i} = temp_date_str{(i-1)*4+1};
+    time_str{i} = temp_time_str{(i-1)*4+1};
+    elevation(i) = mean(temp_elevation((i-1)*4+1:i*4));
+end
+
+idx = (elevation>-1);
+date_str = date_str(idx);
+time_str = time_str(idx);
+elevation = elevation(idx);
+
+%% convert date and time to double %%
+n = length(date_str);
+time_converted = zeros(n,1);
+for i = 1:n
+    str = strcat(date_str{i},time_str{i});
+    formatIn = 'yyyy/mm/ddHH:MM:SS';
+    time_converted(i) = datenum(str,formatIn);
+%    if mod(i,1000) == 0
+%        fprintf('%d done', i);
+%    end
+end
+
+% get data between two big gaps
+mydiff = diff(time_converted);
+gap_idx = find((mydiff>10));
+idx = (gap_idx(1)+2:gap_idx(2));
+date_str = date_str(idx);
+time_str = time_str(idx);
+time_converted = time_converted(idx);
+elevation = elevation(idx);
+
+%% plot gefcom data %%
+load gefcom.mat
+[n,D] = size(times);
+x = times; y=loads(:,1);
+x_year = (x-min(x))/365 + 2004;
+figure();
+subplot(2,1,1);
+plot(x_year,y);
+xlabel('year')
+ylabel('load(kW)')
+xlim([2004,2008.5])
+subplot(2,1,2);
+x_day = x-min(x);
+plot(x_day(1:7*24),y(1:7*24));
+xlim([0,7])
+ylim([0,5*(1e+4)])
+xlabel('day in Jan 2004')
+ylabel('load(kW)')
+
+
+%% plot tidal data %%
+load tidal.mat
+n = length(time_converted);
+x = time_converted; y = elevation;
+x_year = (x-min(x))/365 + 2003;
+% figure();
+subplot(2,1,1);
+plot(x_year,y);
+xlabel('year')
+ylabel('sea level elevation')
+xlim([2003,2006.7])
+ylim([0,8])
+subplot(2,1,2);
+x_day = x-min(x) + 1;
+plot(x_day(1:56*24),y(1:56*24));
+xlim([1,57])
+ylim([0,8])
+xlabel('days since Jan 2003')
+ylabel('sea level elevation')
+
+%%
+function kernel_tree_plot(kernel_dict,m_values,y_lim)%,directory)
+keys = kernel_dict.keys; 
+for key_ind = 1:length(keys)
+    key=keys{key_ind};
+    kernel_cell = kernel_dict(key);
+    lb = kernel_cell{1}; ub = kernel_cell{4}; ne = kernel_cell{5};
+    figure();
+    set(gca,'fontsize',18)
+    hold on
+    x_idx = 1:length(m_values);
+    xlim([0.5,6.5])
+    ylim(y_lim);
+    plot(x_idx,ne*ones(size(m_values)),'LineWidth',2);
+    midpt = 0.5*(ub + lb);
+    errorbar(x_idx,midpt,lb,ub,'.','MarkerSize',0.1)
+    plot(x_idx,ub,'LineWidth',3);
+    plot(x_idx,lb,'LineWidth',1);
+    set(gca,'XTick',[1 2 3 4 5 6]);
+    set(gca,'XTickLabel',[10 20 40 80 160 320]);
+    xlabel('m')
+    %ylabel('negative energy')
+    title(key)
+    %legend('UB','fullGP','LB')
+    hold off
+    file_name=strcat(directory,key,'.fig');
+    file_name = regexprep(file_name,'+','_plus_');
+    file_name = regexprep(file_name,'*','_times_');
+    saveas(fig,file_name)
+end
+
+end
 
 

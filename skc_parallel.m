@@ -1,4 +1,4 @@
-function [kernel_buffer,kernel_buffer_history, kernel_top, kernel_top_history] = skc_parallel(x,y,final_depth,num_iter,m,seed,S,precond)
+function [kernel_buffer,kernel_buffer_history, kernel_top, kernel_top_history] = skc_parallel(x,y,final_depth,num_iter,m,seed,S,precond,string)
 % function to carry out scalable kernel discovery on inputs x, outputs y
 % up to depth = final_depth
 % with num_iter rand inits for each kernel
@@ -33,6 +33,8 @@ kernel_new = struct('key',{},'lb',{},'ub',{},'gp_var',{},'indices',{});
 rng(seed);
 [n,~] = size(x); % n is n_data
 
+start = tic;
+
 for depth = 1:final_depth
     if depth == 1
         keys = base_kernels.keys;
@@ -62,14 +64,14 @@ for depth = 1:final_depth
             ub = ubfunction(x,y,gp_var_best,precond);
             
             kernel = struct('key',key,'lb',lb,'ub',ub,'gp_var',gp_var_best,'indices',indices);
-            
+
             %%% compare kernel with previous kernels
             n_buffer = length(kernel_buffer);
             if n_buffer == 0 % buffer is empty
                 kernel_buffer(1) = kernel; kernel_top = kernel;
-            elseif ub < kernel_top.lb % kernel interval strictly below top kernel interval
-                % ignore kernel
-            elseif lb < kernel_top.lb % kernel interval overlaps with top kernel interval, but has lower lb than top_kernel
+%             elseif ub < kernel_top.lb % kernel interval strictly below top kernel interval
+%                 % ignore kernel
+            elseif lb < kernel_top.lb % kernel has lower lb than top kernel
                 [buffer_min_val, buffer_min_ind] = findmin(kernel_buffer);
                 if n_buffer < S % buffer not full
                     kernel_buffer(n_buffer+1) = kernel;
@@ -80,15 +82,15 @@ for depth = 1:final_depth
                 kernel_top = kernel;
                 %%% compare kernels in buffer to new kernel_top, and see if
                 %%% they should remain or be deleted
-                del_ind=[]; % indices of kernels to be deleted
-                for buffer_ind = 1:length(kernel_buffer)
-                    buffer_kernel = kernel_buffer(buffer_ind);
-                    if buffer_kernel.ub < lb % if kernel in buffer has strictly lower interval than kernel_top
-                        del_ind(length(del_ind)+1)=buffer_ind;
-                    end
-                end
-                kernel_buffer(del_ind)=[]; % delete kernels
-                n_buffer_new = length(kernel_buffer);
+%                 del_ind=[]; % indices of kernels to be deleted
+%                 for buffer_ind = 1:length(kernel_buffer)
+%                     buffer_kernel = kernel_buffer(buffer_ind);
+%                     if buffer_kernel.ub < lb % if kernel in buffer has strictly lower interval than kernel_top
+%                         del_ind(length(del_ind)+1)=buffer_ind;
+%                     end
+%                 end
+%                 kernel_buffer(del_ind)=[]; % delete kernels
+                n_buffer_new = n_buffer;
                 if n_buffer_new < S % if buffer is not full
                     kernel_buffer(n_buffer_new+1) = kernel;
                 else % buffer full, so replace the buffer kernel with the lowest lb
@@ -152,14 +154,15 @@ for depth = 1:final_depth
                 
                 %%% find ub for hyp from best lb
                 ub = ubfunction(x,y,gp_var_best,precond);
-                
+
                 kernel = struct('key',key,'lb',lb,'ub',ub,'gp_var',gp_var_best,'indices',indices);
                 
                 %%% compare kernel with previous kernels
                 n_buffer = length(kernel_buffer);
-                if ub < kernel_top.lb % kernel interval strictly below top kernel interval
-                    % ignore kernel
-                elseif lb < kernel_top.lb % kernel interval overlaps with top kernel interval, but has lower lb than top_kernel
+%                 if ub < kernel_top.lb % kernel interval strictly below top kernel interval
+%                     % ignore kernel
+%                 elseif lb < kernel_top.lb % kernel interval overlaps with top kernel interval, but has lower lb than top_kernel
+                if lb < kernel_top.lb % kernel interval overlaps with top kernel interval, but has lower lb than top_kernel
                     [buffer_min_val, buffer_min_ind] = findmin(kernel_buffer);
                     if n_buffer < S % buffer not full
                         kernel_buffer(n_buffer+1) = kernel;
@@ -170,14 +173,14 @@ for depth = 1:final_depth
                     kernel_top = kernel;
                     %%% compare kernels in buffer to new kernel_top, and see if
                     %%% they should remain or be deleted
-                    del_ind=[]; % indices of kernels to be deleted
-                    for buffer_ind = 1:length(kernel_buffer)
-                        buffer_kernel = kernel_buffer(buffer_ind);
-                        if buffer_kernel.ub < lb % if kernel in buffer has strictly lower interval than kernel_top
-                            del_ind(length(del_ind)+1)=buffer_ind;
-                        end
-                    end
-                    kernel_buffer(del_ind)=[]; % delete kernels
+%                     del_ind=[]; % indices of kernels to be deleted
+%                     for buffer_ind = 1:length(kernel_buffer)
+%                         buffer_kernel = kernel_buffer(buffer_ind);
+%                         if buffer_kernel.ub < lb % if kernel in buffer has strictly lower interval than kernel_top
+%                             del_ind(length(del_ind)+1)=buffer_ind;
+%                         end
+%                     end
+%                     kernel_buffer(del_ind)=[]; % delete kernels
                     n_buffer_new = length(kernel_buffer);
                     if n_buffer_new < S % if buffer is not full
                         kernel_buffer(n_buffer_new+1) = kernel;
@@ -195,6 +198,8 @@ for depth = 1:final_depth
     kbh_length=length(kernel_buffer_history);
     kernel_buffer_history((kbh_length+1):(kbh_length+length(kernel_new)))=kernel_new;
     fprintf('depth %d done\n',depth);
+    fprintf('%f elapsed since start\n',toc(start))
+    save(string,'kernel_buffer', 'kernel_buffer_history', 'kernel_top', 'kernel_top_history');
 end
 
 end

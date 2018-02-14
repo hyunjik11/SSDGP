@@ -9,7 +9,7 @@ function gpcf=per_init(x,y,dim)
     minp = log(10*(max(x)-min(x))/n);
     maxp = log((max(x)-min(x))/5);
     plper=prior_gaussian('mu',minp+1,'s2',0.25);
-    plmaxper=prior_gaussian('mu',maxp-2,'s2',0.5);
+    plmaxper=prior_gaussian('mu',maxp-1,'s2',0.5);
     if nargin == 2
         if rand() < 0.5
             gpcf = gpcf_periodic('lengthScale',std_x*exp(randn()/2),...

@@ -1,1 +1,8 @@
 *~
+*.png
+*.fig
+*.zip
+*.mat
+*.pdf
+*.jpg
+plots/*

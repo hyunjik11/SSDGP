@@ -1,4 +1,4 @@
-function [kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = cks_parallel(x,y,final_depth,num_iter,seed,S)
+function [kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = cks_parallel(x,y,final_depth,num_iter,seed,S,string)
 % function to carry out compositional kernel search on inputs x, outputs y
 % up to depth = final_depth
 % with num_iter rand inits for each kernel
@@ -28,6 +28,8 @@ kernel_new = struct('key',{},'bic',{},'gp',{});
 
 rng(seed);
 [n,~] = size(x); % n is n_data
+
+start=tic;
 
 for depth = 1:final_depth
     if depth == 1
@@ -140,6 +142,8 @@ for depth = 1:final_depth
     kbh_length=length(kernel_buffer_history);
     kernel_buffer_history((kbh_length+1):(kbh_length+length(kernel_new)))=kernel_new;
     fprintf('depth %d done\n',depth);
+    fprintf('%f elapsed since start\n',toc(start))
+    save(string,'kernel_buffer','kernel_buffer_history', 'kernel_top', 'kernel_top_history');
 end
 
 end

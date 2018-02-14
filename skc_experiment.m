@@ -6,16 +6,18 @@ concrete = 0;
 mauna = 0;
 pp=0;
 gefcom=1;
+temp_ca_sb=0;
+temp_ca_sb_ext=0;
+temp_ca_sb_short=0;
+tidal = 0;
 
 siris = 0;
 anzu = 0;
 greypartridge = 0;
 greyplover = 0;
-greywagtail = 0;
-greyheron = 1;
-
-num_workers=30;
-
+greywagtail = 1;
+greyheron = 0;
+greyostrich = 0;
 
 if solar
     load solar.mat
@@ -69,6 +71,46 @@ if gefcom
     y = (y-y_mean)/y_std; %normalise y;
     data_str = 'gefcom';
 end
+if temp_ca_sb
+    load temp_ca_sb.mat
+    n = length(time_converted);
+    x = time_converted; y = temp_avg;
+    x_mean=mean(x); x_std=std(x);
+    y_mean=mean(y); y_std=std(y);
+    x = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
+    y = (y-y_mean)/y_std; %normalise y;
+    data_str = 'temp_ca_sb';
+end
+if temp_ca_sb_ext
+    load temp_ca_sb_ext.mat
+    n = length(time_converted);
+    x = time_converted; y = temp_avg;
+    x_mean=mean(x); x_std=std(x);
+    y_mean=mean(y); y_std=std(y);
+    x = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
+    y = (y-y_mean)/y_std; %normalise y;
+    data_str = 'temp_ca_sb_ext';
+end
+if temp_ca_sb_short
+    load temp_ca_sb_short.mat
+    n = length(time_converted);
+    x = time_converted; y = temp_avg;
+    x_mean=mean(x); x_std=std(x);
+    y_mean=mean(y); y_std=std(y);
+    x = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
+    y = (y-y_mean)/y_std; %normalise y;
+    data_str = 'temp_ca_sb_ext';
+end
+if tidal
+    load tidal.mat
+    n = length(time_converted);
+    x = time_converted; y = elevation;
+    x_mean=mean(x); x_std=std(x);
+    y_mean=mean(y); y_std=std(y);
+    x = (x-repmat(x_mean,n,1))./repmat(x_std,n,1); %normalise x;
+    y = (y-y_mean)/y_std; %normalise y;
+    data_str = 'tidal';
+end
 
 if siris
     dir_str = '/data/siris/not-backed-up/hkim/';
@@ -88,29 +130,46 @@ end
 if greyheron
     dir_str = '/data/greyheron/not-backed-up/oxwasp/oxwaspor/hkim/';
 end
+if greyostrich
+    dir_str = '/data/greyostrich/not-backed-up/oxwasp/oxwaspor/hkim/';
+end
 
+if siris || anzu || greypartridge || greyplover || greyostrich
+    myCluster = parcluster('local');
+    myCluster.NumWorkers = 30;
+    saveProfile(myCluster);
+end
+
+num_workers=15;
 POOL=parpool('local',num_workers,'IdleTimeout',Inf);
 final_depth=6;
 num_iter=5;
-S=2;
+lb=0;
+S=1;
 seed=123;
 precond = 'PIC';
 %m_values = [10,20,40,80,160,320];
-if 1==1
-for m=[160]
+
+for m=[320]
         %if (m > 80) || ((m==80) && (S == 3))
-        string_txt = [dir_str data_str '_skc_experiment_' num2str(m) 'm_' num2str(S), 'S.txt'];
-        diary(string_txt);
-        fprintf('m=%d, S=%d \n',m,S);
-        tic;
-        [kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skc_parallel_ub(x,y,final_depth,num_iter,m,seed,S,precond);
-        toc;
+        
+        if lb==1
+            string_txt = [dir_str data_str '_skc_lb_experiment_' num2str(m) 'm_' num2str(S), 'S' num2str(num_iter) 'iter.txt'];
+            diary(string_txt);
+            fprintf('m=%d, S=%d \n',m,S);
+            string = [dir_str data_str '_skc_lb_experiment_' num2str(m) 'm_' num2str(S), 'S.mat'];
+            [kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skc_parallel(x,y,final_depth,num_iter,m,seed,S,precond,string);
+        else
+            string_txt = [dir_str data_str '_skc_experiment_' num2str(m) 'm_' num2str(S), 'S' num2str(num_iter) 'iter.txt'];
+            diary(string_txt);
+            fprintf('m=%d, S=%d \n',m,S);
+            string = [dir_str data_str '_skc_experiment_' num2str(m) 'm_' num2str(S), 'S.mat'];
+            [kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skc_parallel_ub(x,y,final_depth,num_iter,m,seed,S,precond,string);
+        end
         diary off
-        string = [dir_str data_str '_skc_experiment_' num2str(m) 'm_' num2str(S), 'S.mat'];
-        save(string,'kernel_buffer', 'kernel_buffer_history', 'kernel_top', 'kernel_top_history');
         %end
 end
-end
+
 
 %m=20; S=3; final_depth=3;
 %[kernel_buffer, kernel_buffer_history, kernel_top, kernel_top_history] = skc_parallel_ub(x,y,final_depth,num_iter,m,seed,S,precond);
